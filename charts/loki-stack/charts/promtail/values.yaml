@@ -1,0 +1,95 @@
+affinity: {}
+annotations: {}
+config:
+  client:
+    backoff_config:
+      max_period: 5s
+      max_retries: 20
+      min_period: 100ms
+    batchsize: 102400
+    batchwait: 1s
+    external_labels: {}
+    timeout: 10s
+  positions:
+    filename: /run/promtail/positions.yaml
+  server:
+    http_listen_port: 3101
+  target_config:
+    sync_period: 10s
+deploymentStrategy: {}
+env: []
+extraCommandlineArgs: []
+extraScrapeConfigs: []
+extraVolumeMounts: []
+extraVolumes: []
+image:
+  pullPolicy: IfNotPresent
+  repository: grafana/promtail
+  tag: 1.5.0
+initContainer:
+  enabled: false
+  fsInotifyMaxUserInstances: 128
+livenessProbe: {}
+loki:
+  serviceName: ""
+  servicePort: 3100
+  serviceScheme: http
+nameOverride: promtail
+nodeSelector: {}
+pipelineStages:
+- docker: {}
+podAnnotations:
+  prometheus.io/port: http-metrics
+  prometheus.io/scrape: "true"
+podLabels: {}
+rbac:
+  create: true
+  pspEnabled: true
+readinessProbe:
+  failureThreshold: 5
+  httpGet:
+    path: /ready
+    port: http-metrics
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+resources: {}
+scrapeConfigs: []
+securityContext:
+  readOnlyRootFilesystem: true
+  runAsGroup: 0
+  runAsUser: 0
+serviceAccount:
+  create: true
+  name: null
+serviceMonitor:
+  additionalLabels: {}
+  annotations: {}
+  enabled: false
+  interval: ""
+syslogService:
+  annotations: {}
+  enabled: false
+  labels: {}
+  loadBalancerIP: null
+  port: 1514
+  type: ClusterIP
+tolerations:
+- effect: NoSchedule
+  key: node-role.kubernetes.io/master
+  operator: Exists
+volumeMounts:
+- mountPath: /var/lib/docker/containers
+  name: docker
+  readOnly: true
+- mountPath: /var/log/pods
+  name: pods
+  readOnly: true
+volumes:
+- hostPath:
+    path: /var/lib/docker/containers
+  name: docker
+- hostPath:
+    path: /var/log/pods
+  name: pods

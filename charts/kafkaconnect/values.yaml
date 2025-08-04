@@ -1,0 +1,31 @@
+config:
+  maximumPoolSize: "5"
+  minimumIdle: "2"
+database:
+  password: tea
+  port: "5432"
+  schema: merck
+  user: postgres
+fullnameOverride: ""
+image:
+  repository: local-docker-registry:5001/kafka-timescale
+imagePullSecrets:
+- name: us-east-1-ecr-registry
+kafka:
+  host: phziot-kafkacluster-kafka-bootstrap
+  port: "9092"
+kafkaBootstrapServer: ""
+nameOverride: ""
+redis:
+  hosts: ""
+  password: ""
+replicaCount: 1
+resources:
+  limits:
+    cpu: 4
+    memory: 6Gi
+  requests:
+    cpu: 4
+    memory: 6Gi
+service:
+  port: 8083

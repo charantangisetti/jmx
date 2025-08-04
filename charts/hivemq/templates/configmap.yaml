@@ -1,0 +1,57 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "hivemq.fullname" . }}-config
+data:
+  hivemq_broker.lic: {{ .Values.hivemq_broker_license | quote | nindent 4 }}
+  hivemq_kafka_extension.elic: {{ .Values.hivemq_kafka_extension_license | quote | nindent 4 }}
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "hivemq.fullname" . }}-kafka-extension-config
+data:
+  kafka-configuration.xml: |
+    <?xml version="1.0" encoding="UTF-8" ?>
+    <kafka-configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="kafka-extension.xsd">
+    <kafka-clusters>
+        <kafka-cluster>
+            <id>cluster01</id>
+            {{ if .Values.kafkaClusterBootstrap -}}
+            <bootstrap-servers>{{ .Values.kafkaClusterBootstrap }}</bootstrap-servers>
+            {{- else -}}
+            <bootstrap-servers>{{ .Release.Name }}-kafkacluster-kafka-bootstrap:9092</bootstrap-servers>
+            {{- end }}
+        </kafka-cluster>
+    </kafka-clusters>
+    <mqtt-to-kafka-mappings>
+        <mqtt-to-kafka-mapping>
+            <id>mapping01</id>
+            <cluster-id>cluster01</cluster-id>
+            <mqtt-topic-filters>
+                <mqtt-topic-filter>merck_pharma_heartbeat</mqtt-topic-filter>
+            </mqtt-topic-filters>
+            <kafka-topic>merck-pharma-heartbeat</kafka-topic>
+        </mqtt-to-kafka-mapping>
+        <mqtt-to-kafka-mapping>
+            <id>mapping02</id>
+            <cluster-id>cluster01</cluster-id>
+            <mqtt-topic-filters>
+                <mqtt-topic-filter>merck_pharma_sampling_data</mqtt-topic-filter>
+            </mqtt-topic-filters>
+            <kafka-topic>merck-pharma-sampling-data</kafka-topic>
+        </mqtt-to-kafka-mapping>
+    </mqtt-to-kafka-mappings>
+    <kafka-to-mqtt-mappings>
+      <kafka-to-mqtt-mapping>
+        <id>mapping03</id>
+        <cluster-id>cluster01</cluster-id>
+        <kafka-topics>
+            <kafka-topic>merck-pharma-sampling-data-ack</kafka-topic>
+        </kafka-topics>
+        <mqtt-topics>
+            <mqtt-topic>merck_pharma_sampling_data_ack</mqtt-topic>
+        </mqtt-topics>
+      </kafka-to-mqtt-mapping>
+    </kafka-to-mqtt-mappings>
+    </kafka-configuration>

@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "soapconnector.fullname" . }}-config
+data:
+  #Timescale Config
+  {{ if .Values.database.host -}}
+  db.host: {{ .Values.database.host | quote }}
+  {{- else -}}
+  db.host: "{{ .Release.Name }}-timescale.{{ .Release.Namespace }}.svc.cluster.local"
+  {{ end }}  
+  db.port: {{ .Values.database.port | quote }}
+  db.username: {{ .Values.database.username | quote }}
+  db.password: {{ .Values.database.password | quote }}
+  db.name: {{ .Values.database.database | quote }}
+  {{ if .Values.glimsurl -}}
+  glims.url: {{ .Values.glimsurl | quote }}
+  {{- else -}}
+  glims.url: "http://phziot-soapconnector/api/v1/glims/listener"
+  {{ end }}
+  app_host: {{ .Values.config.app_host | quote }}
+  app_port: {{ .Values.config.app_port | quote }}
+  log_level: {{ .Values.config.log_level | quote }}
+  by_pass_authentication: {{ .Values.config.by_pass_authentication | quote }}
+  pharma_api_private_key: {{ .Values.config.pharma_api_private_key | quote }}
+  pharma_api_access_key: {{ .Values.config.pharma_api_access_key | quote }}
+  pharma_api_secret_key: {{ .Values.config.pharma_api_secret_key | quote }}
+  expiry_limit: {{ .Values.config.expiry_limit | quote }} 
+  CP_MIN_SIZE: {{ .Values.config.CP_MIN_SIZE | quote }}
+  CP_MAX_SIZE: {{ .Values.config.CP_MAX_SIZE | quote }}
+  ALLOW_DEFAULT_SITE_ONLY: {{ .Values.config.ALLOW_DEFAULT_SITE_ONLY | quote }}
+  AUTO_SCHEDULED_DUE_DATE_FOR: {{ .Values.config.AUTO_SCHEDULED_DUE_DATE_FOR | quote }}

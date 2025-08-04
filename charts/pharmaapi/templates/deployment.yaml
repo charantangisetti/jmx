@@ -1,0 +1,155 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pharmaapi.fullname" . }}
+  labels:
+    {{- include "pharmaapi.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "pharmaapi.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "pharmaapi.selectorLabels" . | nindent 8 }}
+    spec:
+      # imagePullSecrets: 
+      #       - name: {{ .Values.imagePullSecrets }}
+      initContainers:
+      - name: wait-for-soapconnector
+        image: local-docker-registry:5001/k8s-wait-for:v1.6
+        imagePullPolicy: IfNotPresent
+        args:
+          - "pod"
+          - "-lapp.kubernetes.io/name=soapconnector"
+          - "--namespace"
+          - "{{ .Release.Namespace }}"
+      - name: wait-for-soapconnector-svc
+        image: local-docker-registry:5001/busybox:1.28
+        imagePullPolicy: IfNotPresent
+        command:
+          - sh
+          - -c
+          - |
+            echo "Waiting for soapconnector service  to be available..."
+            until nslookup {{ .Release.Name }}-soapconnector.{{ .Release.Namespace }}.svc.cluster.local; do
+              echo " soapconnector service not ready, waiting 5 seconds..."
+              sleep 5
+            done
+            echo "soapconnector service is now available!"
+            echo "Checking if soapconnector is responding..."
+            until nc -z {{ .Release.Name }}-soapconnector.{{ .Release.Namespace }}.svc.cluster.local 80; do
+              echo "soapconnector not responding on port 80, waiting 5 seconds..."
+              sleep 5
+            done
+            echo "soapconnector is ready and responding!"
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pharmaapi.fullname" . }}-config
+                  key: db.host
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pharmaapi.fullname" . }}-config
+                  key: db.port
+            - name: DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pharmaapi.fullname" . }}-config
+                  key: db.username
+            - name: DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pharmaapi.fullname" . }}-config
+                  key: db.password
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pharmaapi.fullname" . }}-config
+                  key: db.name
+            - name: ACTION_MANAGER_API_URL
+              valueFrom:
+                configMapKeyRef:
+                    name: {{ include "pharmaapi.fullname" . }}-config
+                    key: action_manager_api_url
+            - name: APP_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: phziot-pharmaapi-config
+                  key: app_version
+            - name: APP_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pharmaapi.fullname" . }}-config
+                  key: app_host
+            - name: APP_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pharmaapi.fullname" . }}-config
+                  key: app_port
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pharmaapi.fullname" . }}-config
+                  key: log_level
+            - name: BY_PASS_AUTHENTICATION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pharmaapi.fullname" . }}-config
+                  key: by_pass_authentication
+            - name: EXPIRY_LIMIT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pharmaapi.fullname" . }}-config
+                  key: expiry_limit
+            - name: JWT_PRIVATE_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pharmaapi.fullname" . }}-config
+                  key: pharma_api_private_key
+            - name: PHARMA_API_ACCESS_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pharmaapi.fullname" . }}-config
+                  key: pharma_api_access_key
+            - name: PHARMA_API_SECRET_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pharmaapi.fullname" . }}-config
+                  key: pharma_api_secret_key
+            - name: CP_MIN_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pharmaapi.fullname" . }}-config
+                  key: CP_MIN_SIZE
+            - name: CP_MAX_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pharmaapi.fullname" . }}-config
+                  key: CP_MAX_SIZE
+          ports:
+            - name: http
+              containerPort: 9001
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+

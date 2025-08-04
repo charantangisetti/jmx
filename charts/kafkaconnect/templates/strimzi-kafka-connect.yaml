@@ -1,0 +1,44 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnect
+metadata:
+  name: {{ include "kafkaconnect.fullname" . }}
+  annotations:
+    strimzi.io/use-connector-resources: "true"
+  labels:
+    {{- include "kafkaconnect.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  {{ if .Values.kafkaBootstrapServer -}}
+  bootstrapServers: {{ .Values.kafkaBootstrapServer }}
+  {{- else -}}
+  bootstrapServers: {{ .Release.Name }}-kafkacluster-kafka-bootstrap:9093
+  {{- end }}
+  image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+  config:
+    value.converter: "org.apache.kafka.connect.storage.StringConverter"
+    key.converter: "org.apache.kafka.connect.storage.StringConverter"
+  resources:
+    {{- toYaml .Values.resources | nindent 4 }}
+  logging:
+    type: inline
+    loggers:
+      connect.root.logger: "INFO"
+  readinessProbe:
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+  livenessProbe:
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+  jvmOptions:
+    "-Xmx": "4g"
+    "-Xms": "4g"
+  template:
+    pod:
+     {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+     {{- end }}
+  tls:
+    trustedCertificates:
+      - secretName: {{ .Release.Name }}-kafkacluster-cluster-ca-cert
+        certificate: ca.crt

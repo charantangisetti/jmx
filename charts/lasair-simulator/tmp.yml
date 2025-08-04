@@ -1,0 +1,107 @@
+---
+# Source: aerotrak-simulator/templates/config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: phziot-aerotrak-simulator-config
+data:
+  mqtt_client_id: "aerotrak_SIM_DH_001"
+---
+# Source: aerotrak-simulator/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phziot-aerotrak-simulator
+  labels:
+    helm.sh/chart: aerotrak-simulator-1.11.0
+    app.kubernetes.io/name: aerotrak-simulator
+    app.kubernetes.io/instance: phziot
+    app.kubernetes.io/version: "v1.11.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aerotrak-simulator
+      app.kubernetes.io/instance: phziot
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aerotrak-simulator
+        app.kubernetes.io/instance: phziot
+    spec:
+      initContainers:
+      - name: init-hivemq-mqtt
+        image: busybox:1.28
+        command:
+            - sh
+            - -c
+            - |
+              until printf "." && nc -z -w 2 phziot-hivemq-mqtt.default.svc.cluster.local 1883; do
+                  sleep 2;
+              done;
+              echo 'HiveMQ OK ✓'
+      containers:
+      - name: sim-aerotrak-agent
+        image: 786422513092.dkr.ecr.us-east-1.amazonaws.com/particle_counter_simulator:v1.11.0
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        ports:
+          - containerPort: 6001
+            name: agent-port
+          - containerPort: 1234
+            name: agent-ui-port
+        env:
+          - name: AGENT_COUNT
+            value: "1"
+          - name: AGENT_DEVICE_TYPE
+            value: "aerotrak"
+          - name: AGENT_MODBUS_IP 
+            value: "127.0.0.1"
+          - name: AGENT_SIMULATION_MODE
+            value: "1"
+          - name: AGENT_LOG_LEVEL
+            value: "3"
+          - name: AGENT_MODBUS_PORT
+            value: "505"
+      - name: data-handler
+        image: 786422513092.dkr.ecr.us-east-1.amazonaws.com/efm-rep-proto/data-handler:v1.11.0
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+          - name: MQTT_DH_CLIENT_ID
+            valueFrom:
+              configMapKeyRef:
+                name: phziot-aerotrak-simulator-config
+                key: mqtt_client_id
+          - name: MQTT_HEARTBEAT_QOS
+            value: "0"
+          - name: MQTT_DATA_QOS
+            value: "2"
+          - name: MQTT_USERNAME
+            value: "merck"
+          - name: MQTT_PASSWORD
+            value: "merck123"
+          - name: MQTT_REQ_RES_QOS
+            value: "2"
+          - name: LOG_VERBOSITY
+            value: "WARN"
+          - name: MQTT_URL
+            value: "tcp://phziot-hivemq-mqtt"
+          - name: PROJECT
+            value: "MERCK_PHARMA"
+          - name: DO_MOCK
+            value: "false"
+          - name: API_ROOT
+            value: "http://phziot-pharmaapi/api"
+          - name: DEVICE_AGENT
+            value: "http://localhost:6001"
+          - name: RETRY_TIME
+            value: "5"
+          - name: HANDLER_TOTAL_LOGS_SIZE
+            value: "100MB"

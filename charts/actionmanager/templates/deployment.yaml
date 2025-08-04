@@ -1,0 +1,254 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "actionmanager.fullname" . }}
+  labels:
+    {{- include "actionmanager.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "actionmanager.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "actionmanager.selectorLabels" . | nindent 8 }}
+    spec:
+      # imagePullSecrets: 
+      #       - name: {{ .Values.imagePullSecrets }}
+      initContainers:
+      - name: wait-for-pharmaapi
+        image: local-docker-registry:5001/k8s-wait-for:v1.6
+        imagePullPolicy: IfNotPresent
+        args:
+          - "pod"
+          - "-lapp.kubernetes.io/name=pharmaapi"
+          - "--namespace"
+          - "{{ .Release.Namespace }}"
+      - name: wait-for-pharmaapi-svc
+        image: local-docker-registry:5001/busybox:1.28
+        imagePullPolicy: IfNotPresent
+        command:
+          - sh
+          - -c
+          - |
+            echo "Waiting for pharmaapi service  to be available..."
+            until nslookup {{ .Release.Name }}-pharmaapi.{{ .Release.Namespace }}.svc.cluster.local; do
+              echo " pharmaapi service not ready, waiting 5 seconds..."
+              sleep 5
+            done
+            echo "pharmaapi service is now available!"
+            echo "Checking if pharmaapi is responding..."
+            until nc -z {{ .Release.Name }}-pharmaapi.{{ .Release.Namespace }}.svc.cluster.local 80; do
+              echo "pharmaapi not responding on port 80, waiting 5 seconds..."
+              sleep 5
+            done
+            echo "pharmaapi is ready and responding!"
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: APP_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.app_host
+            - name: APP_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.app_port
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: db.host
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: db.port
+            - name: DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: db.username
+            - name: DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: db.password
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: db.name
+            - name: MQTT_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.mqtt_url
+            - name: MQTT_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.mqtt_port
+            - name: MQTT_REQUEST_TOPIC
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.mqtt_request_topic
+            - name: MQTT_RESPONSE_TOPIC
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.mqtt_response_topic
+            - name: MQTT_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.mqtt_client_id
+            - name: MAIL_PROVIDER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.mail_provider
+            - name: MAIL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.mail_host
+            - name: MAIL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.mail_user
+            - name: MAIL_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.mail_password
+            - name: MAIL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.mail_port
+            - name: MAIL_FROM
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.mail_from
+            - name: SMS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.sms_url
+            - name: SMS_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.sms_key
+            - name: WEBEX_ACCESS_TOKEN
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.webex_access_token
+            - name: WEBEX_ROOM_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.webex_room_id
+            - name: JWT_PRIVATE_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.pharma_api_private_key
+            - name: ACTION_API_ACCESS_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.pharma_api_access_key
+            - name: ACTION_API_SECRET_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.pharma_api_secret_key
+            - name: PHARMA_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: action_manager.pharma_api_url
+            - name: MQTT_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: mqtt_username
+            - name: MQTT_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: mqtt_password
+            - name: MQTT_CLEAN
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: mqtt_clean
+            - name: EXPIRY_LIMIT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: expiry_limit
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: log_level
+            - name: BY_PASS_AUTHENTICATION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: by_pass_authentication
+            - name: MAIL_ENABLE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: mail_enable
+            - name: SMS_ENABLE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: sms_enable
+            - name: WEBEX_ENABLE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: webex_enable
+            - name: CP_MIN_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: CP_MIN_SIZE
+            - name: CP_MAX_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "actionmanager.fullname" . }}-config
+                  key: CP_MAX_SIZE
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

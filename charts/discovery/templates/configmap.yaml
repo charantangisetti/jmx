@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "discovery.fullname" . }}-config
+data:
+  log_verbosity: {{ .Values.config.log_verbosity | quote }}
+  {{ if .Values.config.mqttbroker_url -}}
+  mqttbroker_url: {{ .Values.config.mqttbroker_url | quote }}
+  {{- else -}}
+  mqttbroker_url: "tcp://{{ .Release.Name }}-hivemq-mqtt.{{ .Release.Namespace }}.svc.cluster.local"
+  {{- end }}
+  project: {{ .Values.config.project | quote }}
+  {{ if .Values.config.api_root -}}
+  api_root: {{ .Values.config.api_root | quote }}
+  {{- else -}}
+  api_root: "http://{{ .Release.Name }}-pharmaapi.{{ .Release.Namespace }}.svc.cluster.local/api"
+  {{ end }}
+  DEVICE_UPDATE_PERIOD_HRS: {{ .Values.config.DEVICE_UPDATE_PERIOD_HRS | quote }}
+  DEVICE_STATUS_UPDATE_PERIOD_MINS: {{ .Values.config.DEVICE_STATUS_UPDATE_PERIOD_MINS | quote }}

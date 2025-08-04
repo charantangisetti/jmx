@@ -1,0 +1,109 @@
+actionmanager:
+  config:
+    db_name: merck
+    db_password: S8Sw8zJum2RXrFPT
+    db_port: "5432"
+    db_username: amapi
+aerotrack-datahandler:
+  enabled: false
+databasemigration:
+  repository: local-docker-registry:5001/database-migration
+  tag: v1.11.0
+dbFromScratch:
+  enabled: true
+dbIncremental:
+  enabled: false
+discovery:
+  config:
+    do_mock: "false"
+    log_verbosity: WARN
+    project: MERCK_PHARMA
+glims-publisher:
+  database:
+    database: merck
+    password: PdK8m2rar8fpcxMM
+    port: "5432"
+    username: glims
+grafana:
+  enabled: false
+hivemq:
+  hivemq_broker_license: |
+    H!MQ$[SLv1]
+    s72xwOdL2IzpE5zsD1CvOQ==
+    aN2n0Jx9flc=
+    12FkA7bNpiprnHfynKSlRTU6vxHYWagj7KXXhZ6A2RCOaBN8mnOc+rjvigYm5PXSWgIprLmkr3EG7Hy7/Xk7AUXajRWpBlLc5CVWmhqxN8sWcft6OIeklSt+NgyxGWg4uemYhEL0TkuXP+RW2K469hCLwE33lcNpl7pU4evIg8+CSYOovPsYShO7fMUKKorfnEXhitJC2VqlaxhibCg8p6paYKBvQI0G626xGvOEsNIOLSq95itw4elZzQRv5vAWEsH9MzQG7p6x3gYKYO1p4nzKOiP5Ve1FY4ca0aKRBg/uwhlwkoOUAEXm393BxnIU9mfpF++hbaifOtKU+7CuxlQ9BBwiDZav9GlPPjROAtp7tHshn3x/THv1oOD0MkeRgiGxZWFTdHszUKvvUASVAr1lev918OzfULHL3yJZbUJ0A62iFVUEiaHD0KMcWnLWZUOTv5KRyIZgIicTcrO9JUJjCPaXbkW/WA9SkS72dCktwRQDT8BVs4Adyq4jpcvSAq49+h+fiWtTrld/C4asxtQUZzhkwBBD4e0JjaNUbKE+61p3/HWFiYrokFb9UQP/Jm02eP60DAkXhbSfDptlbql/GUt4uc4ar3dyr0tuQAeDB7ojlls+jzso6AsNpSgbalNIg5N/ufheNvzRWB81XBFrgdwZf68DSJJm18hyZnpJLtuB3bzL6DSpmvLEQV8v0F4+DzWTl4uNMbz3ViDrOOvcWlSuHK5c0wu0I8GSu8x8yVt2hEDJj+DVrolJUYS7gR7fn/vD3TiqBvUrZPAE4qJveH/QmwQDgkUCaARVPHe8mfKZOOlTAUY3wrubaBffj/IGPIrUhlGpwjTNjwY7n/qrbMJsZL3gKMJw9PDfJAEa0aHIuU3WFdM88NAEvSlXc3zNxRBlZY8BUSFQulywHvwaYVuWMwFNw8hSEl1j8mrzUWZ72PPDEaET6YYagenIyapBmV9rDlkKtiJ3DD96DjYv079cUz513uDMzZUtNzAthsh5GJIG7MgbluNyFTF9keS+Y78WrApcsOxUVbF6adrJbScsLswxXlFAR1MeWLFGY3pMFmGkrCHM1CLEhKkVOL6rIP9d6nviIYnU7YzVDCTg1miygTAQLB2Z3MJHdYwNlLaY35/35jpavvI0qlkUh4sOu0rp4cX31hQM3hOKCTxvjgtRn2H6Izr5bKWiZW/cF5n64oO0/ul0/JeImQ1ucRc+rJ5RwBar6lNGZxbub9kAj2Jt54OlEyvZehxR/2HYxLjUhj6YJBS9HxvS+YhqD5Z6BSN/5hveHepjUIIAJ01YkAr6xMv2BYaGlIB/Fr9BxGJ2aHTymPSbjo7ZJrmfcuQHkvud2neYneQlsHz1aoFMKVXtSIpJAyV3yrf5dkPixJ1GEt8KYUoy3AqeLUHje6tVjqZhO4Vop4QoH3xOZk5+0pvjbLeJ1Y/2YAqF/OMUXR8qviY58B//zfHsgRuKVmvddiMeEMOstECLGGQPgC1OtBEfu8J2hTb5RlIQin2oHG+dWsHMwMFgXIEcG/55VDhc2Q0GIESie0CfUtLv46XDXe4fJcjATASRh454hxjUJBEUx7hdfty99lpw7c8tzQ2VqNXKqlzLHKbBUYun0rksOZIOsK6+D3Ou5htL8NJLeAMoFlzpvyxlK4Z/k6wOZeH8noLWCPXgAENnD2oe2w==
+  hivemq_kafka_extension_license: |
+    H!MQ$[3XT_Lv1]
+    t/FX22CsLLWxWxqmhgFFzg==
+    rgijiyx4Zu4=
+    rl6uRwCfO4lJyqPyUybqkDLLFgLI63Ft3NCwxjK7ALIUcDbEoGTUXTmCht5P+8MAEX2iYpaiX7L+wLhPEORfaJ5tMHw/KLyGmTltXNAeTzWT/S93cUXfT2I8clysYapvtAfa7yd3GgHa3IMt0JkTVLTJeMT7/pKoGdYqVIV/Vzol+GAzPX3J51JfYXkjZwoB+oQfEQJPGzzMrtUuJQZrt5JR1AN9S+tKD4rSbTv6JWZ0eglRXbLj6L4Z2vMlURR2MrpeLiBdTcCyXzBjppReumM7HaCDxLo8HhPiBkDVA92PJJVUJuwY0d5lTRxqtmPDbAWv8EiOlMKQ9+e4rHfneWAfnLPfm/zCKu+m5qNO+iiVg9Z+vLKTwnxEZxd9C2it7FoNApl97k8pASyPiwTng2oRSpPzCjN1ixPUWo1P90klUeqwC6uPDTUMbNcnRHBDt2u/vdkTOyvaorlhIXeRq8yC+khtFpFxCZz2LnKF4BmFd2E9hqywCUvYRObEpDuFprRW1xfoocD8UncZgVlYXEu1X+IAGZDXcwBflBAfWKpAHUEXvvcUtQxLn66oFXV3lPCnqC7vWDR61LbwRzC69GRPIdIoM6c4eZ4Ro5zeeC51UJMFld6UrUxB3S/2FPfE3dp4Wj0LNTjhR/YbEZfs9w5RbVJXqgGvuNWTPF3rDWEl7Ecp3+GCLqynzOSG64kh0Pcei4/2FuwpNpGw8LSh7Ln6BGwt1YSua+2+nNlu4ZDiR2co5/JmOu1Sn8a7HRh8/ioO7LdnjNZVrIC2QScHeIh5zvh5/VyO39n38B32Fx2hNn3rw6JSW6Z02vVk6leYZztVhIFeHGZFREe2BksGsl9ta4NZal7suz6JmI9h5boY0e4oLD2GFbeB8NTH6lO0+m6zNnMo/dOMGq74UXX69Zuxcz8JkiIMMbd5o3JtRJvoz4lMhRwSOrrai4bbE8Zu1BXkzCZdyqKqNVa80Tc5zSf1qVuJcsVNWak+dwEWgdxiaNy3fbj6WCsnR+1Kf6bb5xA7uIPvRlh1NBU5NctidFxArWnw1pQFqanbVJI/01Mt8CXd6pUiuneNaDiy3jfwVoljCsAc7frGfcktDi76m9mWp4uTS4yGbPk1ILZFL0XD0IB6JcdoK3+gyGXRgcxn6r8zMKCQiqdDCT/rgdOmgwJJdCkkzfWFiBQ0VMKid5BRnxIL1OBBb5Newya3foc8XbeuDXI34RLfJ5SXZez5cGKevD26BiZKRYsHOW3jV3eX9sAgTIXevoCdfRT0+cC5vWeFyo9CHwkuWfw+GRdnXWTlwyfPg4qeO/Wy7g5bSjzjrU44MlBlcqeCPnrmySqfntDYtbEVz29aY49esTXjeaIFEQ7zpQv1gooqFfTH+2MrIJ1GbDc7JE+k/n05V/5vTjQlezh1bTZvo+DkzXJTMpz7KpyrYs2MU9gxa8Joh5vt5YKEQDvno2578NIV4+weD9WRxuxcvaTd6WCZK7VzEdq6kz0ZZ+UVWX9FMjrgiE/kS29tvc9X7pCzJNTx8p1w5Udl4oGQSBMmt3OK6pHIwA==
+  service:
+    type: LoadBalancer
+kafkaconnect:
+  database:
+    password: Y28kH6vSbAMFhkdN
+    port: "5432"
+    schema: merck
+    user: kafkaconnect
+  redis:
+    password: n115I^^@$lfj
+lasair-datahandler:
+  enabled: false
+loki-stack:
+  enabled: false
+metone-datahandler:
+  enabled: false
+pharmaapi:
+  database:
+    database: merck
+    password: NJgU6h4YywMYauBG
+    port: "5432"
+    username: pharmaapi
+  redis:
+    password: n115I^^@$lfj
+prometheus:
+  enabled: false
+  extraScrapeConfigs: |
+    - job_name: 'hivemq'
+      scrape_interval: 5s
+      metrics_path: '/metrics'
+      dns_sd_configs:
+        - names:
+          - 'phziot-hivemq-discovery'
+          type: 'A'
+          port: 9399
+redis:
+  image:
+    tag: 5.0.7-debian-10-r0
+  master:
+    service:
+      type: LoadBalancer
+  password: n115I^^@$lfj
+  sentinel:
+    image:
+      tag: 5.0.7-debian-10-r0
+soapconnector:
+  database:
+    database: merck
+    password: 9t6fgJnE6NeK2Kyt
+    port: "5432"
+    username: soap
+strimzi-kafka-operator:
+  enabled: false
+timescaledb-single:
+  clusterName: phziot-timescale
+  credentials:
+    postgres: mjGTt7cmFdhydsER
+  patroni:
+    bootstrap:
+      dcs:
+        postgresql:
+          parameters:
+            wal_keep_segments: 256
+  persistentVolumes:
+    data:
+      size: 20Gi
+    wal:
+      size: 10Gi
+  sharedMemory:
+    useMount: true

@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "lasair-datahandler.fullname" . }}
+  labels:
+    {{- include "lasair-datahandler.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "lasair-datahandler.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "lasair-datahandler.selectorLabels" . | nindent 8 }}
+    spec:
+      initContainers:
+      - name: init-hivemq-mqtt
+        image: busybox:1.28
+        command:
+            - sh
+            - -c
+            - |
+              until printf "." && nc -z -w 2 {{ .Release.Name }}-hivemq-mqtt.{{ .Release.Namespace }}.svc.cluster.local 1883; do
+                  sleep 2;
+              done;
+              echo 'HiveMQ OK ✓'
+      containers:
+      - name: data-handler
+        image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+          - name: MQTT_DH_CLIENT_ID
+            value: "MQTT_DATAHANDLER_DEV_LASAIR_001"
+          - name: MQTT_DH_HEARTBEAT_CLIENT_ID
+            value: "MQTT_DATAHANDLER_HB_LASAIR_DEV001"
+          - name: MQTT_HEARTBEAT_QOS
+            value: "0"
+          - name: MQTT_DATA_QOS
+            value: "2"
+          - name: MQTT_REQ_RES_QOS
+            value: "2"
+          - name: LOG_VERBOSITY
+            value: "WARN"
+          - name: MQTT_USERNAME
+            value: "merck"
+          - name: MQTT_PASSWORD
+            value: "merck123"
+          - name: MQTT_URL
+            value: "tcp://{{ .Release.Name }}-hivemq-mqtt.{{ .Release.Namespace }}.svc.cluster.local"
+          - name: PROJECT
+            value: "MERCK_PHARMA"
+          - name: DO_MOCK
+            value: "false"
+          - name: API_ROOT
+            value: "http://{{ .Release.Name }}-pharmaapi.{{ .Release.Namespace }}.svc.cluster.local/api"
+          - name: DEVICE_AGENT
+          {{- if .Values.device_agent }}
+            value: {{ .Values.device_agent | quote }}
+          {{ else }}
+            value: "http://lab.phz.io:8842"
+          {{ end }}
+          - name: RETRY_TIME
+            value: "5"
+          - name: HANDLER_TOTAL_LOGS_SIZE
+            value: "100MB"  
+          - name: SAMPLE_DATA_RETRY_COUNT
+            value: "10"  
+          - name: SAMPLE_DATA_RETRY_TIME_SECS
+            value: "1"
+          - name: HANDLER_LOG_FILE_PATH
+            value: "/data/logs"
+          - name: HANDLER_LOG_MAX_SIZE
+            value: "10MB"
+          - name: HANDLER_LOG_MAX_DAYS
+            value: "7"
+          - name: HANDLER_LOG_MSG_REPITION
+            value: '1'
+          - name: HANDLER_LOG_MSG_CACHE
+            value: '100'
+          - name: HANDLER_LOG_WRITE_EXPIRE_IN_SECS
+            value: '60'
+          - name: HANDLER_LOG_MARKER
+            value: 'PDH-'
+          - name: MQTT_DH_STATUS_REQ_TOPIC
+            value: 'merck_pharma_dh_status_request'
+          - name: MQTT_DH_STATUS_RES_TOPIC
+            value: 'merck_pharma_dh_status_response'
+          - name: MQTT_ACTION_REQ_TOPIC
+            value: 'merck_pharma_action_request'
+          - name: MQTT_ACTION_RES_TOPIC
+            value: 'merck_pharma_action_response'
+          - name: MQTT_HEARTBEAT_TOPIC
+            value: 'merck_pharma_heartbeat'
+          - name: MQTT_DISCOVERY_TOPIC
+            value: 'merck_pharma_device_discovery'
+          - name: MQTT_DISCOVERY_RES_TOPIC
+            value: 'merck_pharma_device_discovery_response'
+          - name: MQTT_SAMPLE_DATA_TOPIC
+            value: 'merck_pharma_sampling_data'
+          - name: MQTT_SAMPLE_DATA_ACK_TOPIC
+            value: 'merck_pharma_sampling_data_ack'
+          

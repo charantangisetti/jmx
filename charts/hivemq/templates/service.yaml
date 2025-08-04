@@ -1,0 +1,52 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ include "hivemq.fullname" . }}-discovery
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  selector:
+    {{- include "hivemq.selectorLabels" . | nindent 6 }}
+  ports:
+    - protocol: TCP
+      name: discovery
+      port: 1883
+      targetPort: 1883
+    - protocol: TCP
+      name: metrics
+      port: 9399
+      targetPort: 9399
+  clusterIP: None
+  publishNotReadyAddresses: true
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ include "hivemq.fullname" . }}-mqtt
+  annotations:
+    service.spec.externalTrafficPolicy: Local
+  labels:
+    {{- include "hivemq.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "hivemq.selectorLabels" . | nindent 4 }}
+  ports:
+    - protocol: TCP
+      name: mqtt
+      port: 1883
+      targetPort: 1883
+  type: {{ .Values.service.type }}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ include "hivemq.fullname" . }}-web-ui
+spec:
+  selector:
+    {{- include "hivemq.selectorLabels" . | nindent 4 }}
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  sessionAffinity: ClientIP
+  type: NodePort

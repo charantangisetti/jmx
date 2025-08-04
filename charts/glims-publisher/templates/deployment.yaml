@@ -1,0 +1,131 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "glims-publisher.fullname" . }}
+  labels:
+    {{- include "glims-publisher.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "glims-publisher.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "glims-publisher.selectorLabels" . | nindent 8 }}
+    spec:
+      # imagePullSecrets: 
+      #       - name: {{ .Values.imagePullSecrets }}
+      initContainers:
+      - name: wait-for-timescaledb-master
+        image: local-docker-registry:5001/k8s-wait-for:v1.6
+        imagePullPolicy: Always
+        args:
+          - "pod"
+          - "-lapp=phziot-timescaledb,role=master"
+          - "--namespace"
+          - "{{ .Release.Namespace }}"
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DB_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "glims-publisher.fullname" . }}-config
+                  key: db.host
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "glims-publisher.fullname" . }}-config
+                  key: db.port
+            - name: DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "glims-publisher.fullname" . }}-config
+                  key: db.username
+            - name: DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "glims-publisher.fullname" . }}-config
+                  key: db.password
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "glims-publisher.fullname" . }}-config
+                  key: db.name
+            - name: FTP_SYNC_FOR_EVERY_N_MINUTES
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "glims-publisher.fullname" . }}-config
+                  key: config.ftp_sync
+            - name: SMB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "glims-publisher.fullname" . }}-config
+                  key: config.smb_host
+            - name: SMB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "glims-publisher.fullname" . }}-config
+                  key: config.smb_username
+            - name: SMB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "glims-publisher.fullname" . }}-config
+                  key: config.smb_password
+            - name: SMB_FILE_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "glims-publisher.fullname" . }}-config
+                  key: config.smb_path
+            - name: CP_MIN_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "glims-publisher.fullname" . }}-config
+                  key: CP_MIN_SIZE
+            - name: CP_MAX_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "glims-publisher.fullname" . }}-config
+                  key: CP_MAX_SIZE
+            - name: SMB_SHARE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "glims-publisher.fullname" . }}-config
+                  key: config.smb_share
+            - name: SMB_DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "glims-publisher.fullname" . }}-config
+                  key: config.smb_domain
+            - name: ENABLE_SAMPLE_TYPE_BACKFILL
+              valueFrom:
+                configMapKeyRef:
+                  name: phziot-glims-publisher-config
+                  key: config.ENABLE_SAMPLE_TYPE_BACKFILL
+            - name: COMMA_SEPARATED_SAMPLE_TYPES_TO_BE_FILTERED
+              valueFrom:
+                configMapKeyRef:
+                  name: phziot-glims-publisher-config
+                  key: config.COMMA_SEPARATED_SAMPLE_TYPES_TO_BE_FILTERED
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+

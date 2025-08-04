@@ -1,0 +1,22 @@
+
+# Source: pharmaapi/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: phziot-pharmaapi
+  labels:
+    helm.sh/chart: pharmaapi-1.11.0
+    app.kubernetes.io/name: pharmaapi
+    app.kubernetes.io/instance: phziot
+    app.kubernetes.io/version: "v1.11.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: pharmaapi
+    app.kubernetes.io/instance: phziot

@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "aerotrack-datahandler.fullname" . }}
+  labels:
+    {{- include "aerotrack-datahandler.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "aerotrack-datahandler.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "aerotrack-datahandler.selectorLabels" . | nindent 8 }}
+    spec:
+      initContainers:
+      - name: init-hivemq-mqtt
+        image: busybox:1.28
+        command: ['sh', '-c', "until nslookup {{ .Release.Name }}-hivemq-mqtt.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for hivemq broker; sleep 2; done"]
+      containers:
+      - name: data-handler
+        image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+          - name: MQTT_DH_CLIENT_ID
+            value: "MQTT_DATAHANDLER_DEV_aerotrack_001"
+          - name: MQTT_DH_HEARTBEAT_CLIENT_ID
+            value: "MQTT_DATAHANDLER_HB_aerotrack_DEV001"
+          - name: MQTT_HEARTBEAT_QOS
+            value: "0"
+          - name: MQTT_DATA_QOS
+            value: "2"
+          - name: MQTT_REQ_RES_QOS
+            value: "2"
+          - name: LOG_VERBOSITY
+            value: "WARN"
+          - name: MQTT_USERNAME
+            value: "merck"
+          - name: MQTT_PASSWORD
+            value: "merck123"
+          - name: MQTT_URL
+            value: "tcp://{{ .Release.Name }}-hivemq-mqtt.{{ .Release.Namespace }}.svc.cluster.local"
+          - name: PROJECT
+            value: "MERCK_PHARMA"
+          - name: DO_MOCK
+            value: "false"
+          - name: API_ROOT
+            value: "http://{{ .Release.Name }}-pharmaapi.{{ .Release.Namespace }}.svc.cluster.local/api"
+          - name: DEVICE_AGENT
+          {{- if .Values.device_agent }}
+            value: {{ .Values.device_agent | quote }}
+          {{ else }}
+            value: "http://lab.phz.io:8842"
+          {{ end }}

@@ -1,0 +1,15 @@
+fluent-bit:
+  enabled: false
+grafana:
+  enabled: false
+  image:
+    tag: 6.7.0
+  sidecar:
+    datasources:
+      enabled: true
+loki:
+  enabled: true
+prometheus:
+  enabled: false
+promtail:
+  enabled: true

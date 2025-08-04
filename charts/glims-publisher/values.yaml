@@ -1,0 +1,40 @@
+affinity: {}
+config:
+  COMMA_SEPARATED_SAMPLE_TYPES_TO_BE_FILTERED: Scheduled_run,Continuous_run
+  CP_MAX_SIZE: "3"
+  CP_MIN_SIZE: "1"
+  ENABLE_SAMPLE_TYPE_BACKFILL: "yes"
+  ftp_sync: "10"
+  smb_domain: NORTHAMERICA
+  smb_host: usdata024
+  smb_password: Cisco_IoT@20
+  smb_path: ClientRoot/CDH_TEXTFILE/KENILWORTH/DEV4/IoT/Particle Counters
+  smb_share: Glims_dev4
+  smb_username: glims_cisco_iot
+database:
+  database: merck
+  host: ""
+  password: tea
+  port: "5432"
+  username: postgres
+fullnameOverride: ""
+image:
+  pullPolicy: Always
+  repository: local-docker-registry:5001/glims-publisher
+  tag: ""
+imagePullSecrets: []
+nameOverride: ""
+nodeSelector: {}
+podAnnotations: {}
+podSecurityContext: {}
+replicaCount: 1
+resources: {}
+securityContext: {}
+service:
+  port: 80
+  type: ClusterIP
+serviceAccount:
+  annotations: {}
+  create: true
+  name: ""
+tolerations: []

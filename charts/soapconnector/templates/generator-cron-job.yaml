@@ -1,0 +1,50 @@
+# apiVersion: batch/v1beta1
+# kind: CronJob
+# metadata:
+#   name: glims-generator-{{ include "soapconnector.fullname" . }}
+# spec:
+#   schedule: '*/5 * * * *'
+#   successfulJobsHistoryLimit: 5
+#   failedJobsHistoryLimit: 5
+#   jobTemplate:
+#     spec:
+#       template:
+#         spec:
+#           restartPolicy: OnFailure
+#           containers:
+#             - name: {{ .Chart.Name }}
+#               image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+#               imagePullPolicy: {{ .Values.image.pullPolicy }}
+#               command: ["npm"]
+#               args: ["run", "generator"]
+#               env:
+#                 - name: DB_HOST
+#                   valueFrom:
+#                     configMapKeyRef:
+#                       name: {{ include "soapconnector.fullname" . }}-config
+#                       key: db.host
+#                 - name: DB_PORT
+#                   valueFrom:
+#                     configMapKeyRef:
+#                       name: {{ include "soapconnector.fullname" . }}-config
+#                       key: db.port
+#                 - name: DB_USERNAME
+#                   valueFrom:
+#                     configMapKeyRef:
+#                       name: {{ include "soapconnector.fullname" . }}-config
+#                       key: db.username
+#                 - name: DB_PASSWORD
+#                   valueFrom:
+#                     configMapKeyRef:
+#                       name: {{ include "soapconnector.fullname" . }}-config
+#                       key: db.password
+#                 - name: DB_NAME
+#                   valueFrom:
+#                     configMapKeyRef:
+#                       name: {{ include "soapconnector.fullname" . }}-config
+#                       key: db.name
+#                 - name: GLIMS_URL
+#                   valueFrom:
+#                     configMapKeyRef:
+#                       name: {{ include "soapconnector.fullname" . }}-config
+#                       key: glims.url

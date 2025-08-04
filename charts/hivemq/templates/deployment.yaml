@@ -1,0 +1,135 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hivemq.fullname" . }}-replica
+  annotations:
+  labels:
+    {{- include "hivemq.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "hivemq.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      name: {{ include "hivemq.fullname" . }}-cluster
+      labels:
+        {{- include "hivemq.selectorLabels" . | nindent 8 }}
+    spec:
+      # imagePullSecrets: 
+      #       - name: {{ .Values.imagePullSecrets }}
+      containers:
+      - name: hivemq-pods
+        image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"        
+        resources:
+          requests:
+            memory: "12Gi"
+            cpu: "4000m"
+          limits:
+            memory: "12Gi"
+            cpu: "4000m"
+        ports:
+          - containerPort: 8080
+            protocol: TCP
+            name: web-ui
+          - containerPort: 1883
+            protocol: TCP
+            name: mqtt
+        env:
+          - name: HIVEMQ_WEB_UI_PASSWORD
+            value: {{ .Values.webui.password }}
+          - name: HIVEMQ_WEB_UI_USER
+            value: {{ .Values.webui.username }}
+          - name: HIVEMQ_DNS_DISCOVERY_ADDRESS
+            value: {{ include "hivemq.fullname" . }}-discovery.{{ .Release.Namespace }}.svc.cluster.local
+          - name: HIVEMQ_DNS_DISCOVERY_TIMEOUT
+            value: "20"
+          - name: HIVEMQ_DNS_DISCOVERY_INTERVAL
+            value: "21"
+          - name: HIVEMQ_JMX_ENABLED
+            value: "false"
+        readinessProbe:
+          tcpSocket:
+            port: 1883
+          initialDelaySeconds: 30
+          periodSeconds: 60
+          failureThreshold: 60
+        livenessProbe:
+          tcpSocket:
+            port: 1883
+          initialDelaySeconds: 30
+          periodSeconds: 60
+          failureThreshold: 60
+        volumeMounts:
+        - name: kafka-extension-config-volume
+          mountPath: /opt/hivemq/extensions/hivemq-kafka-extension/kafka-configuration.xml
+          subPath: kafka-configuration.xml
+        - name: kafka-extension-config-archive
+          mountPath: /opt/hivemq/extensions/hivemq-kafka-extension/config-archive
+        - name: license-config-volume
+          mountPath: /opt/hivemq/license
+      initContainers:
+      - name: wait-for-redis
+        image: local-docker-registry:5001/busybox:1.28
+        imagePullPolicy: IfNotPresent
+        command:
+          - sh
+          - -c
+          - |
+            echo "Waiting for Redis service redis-master to be available..."
+            until nslookup {{ .Release.Name}}-redis-master.{{ .Release.Namespace }}.svc.cluster.local; do
+              echo "Redis service not ready, waiting 5 seconds..."
+              sleep 5
+            done
+            echo "Redis service is now available!"
+            echo "Checking if Redis is responding..."
+            until nc -z {{ .Release.Name}}-redis-master.{{ .Release.Namespace }}.svc.cluster.local 6379; do
+              echo "Redis not responding on port 6379, waiting 5 seconds..."
+              sleep 5
+            done
+            echo "Redis is ready and responding!"
+      - name: wait-for-kafka
+        image: local-docker-registry:5001/k8s-wait-for:v1.6
+        imagePullPolicy: IfNotPresent
+        args:
+          - "pod"
+          - "-lapp.kubernetes.io/name=kafka"
+          - "--namespace"
+          - "{{ .Release.Namespace }}"
+      - name: wait-untill-kafka-get-ups-completelty
+        image: local-docker-registry:5001/busybox:1.28
+        imagePullPolicy: IfNotPresent
+        command:
+            - sh
+            - -c
+            - sleep 120
+      - name: init-kafka-broker-wait
+        image: local-docker-registry:5001/busybox:1.28
+        command:
+            - sh
+            - -c
+            - |
+              until printf "." && nc -z -w 2 {{ .Release.Name }}-kafkacluster-kafka-bootstrap.{{ .Release.Namespace }}.svc.cluster.local 9093; do
+                  sleep 5m;
+              done;
+              echo 'Kafka Broker bootstrap ok ✓'
+      - name: init-hivemq-discovery
+        image: local-docker-registry:5001/busybox:1.28
+        command:
+            - sh
+            - -c
+            - |
+              until nslookup {{ .Release.Name }}-hivemq-discovery.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do 
+                echo Waiting for HiveMQ Discovery; 
+                sleep 5m; 
+              done;
+              echo 'HiveMQ Discovery OK ✓'
+      volumes:
+        - name: kafka-extension-config-archive
+          emptyDir: {}
+        - name: license-config-volume
+          configMap:
+            name: {{ include "hivemq.fullname" . }}-config
+        - name: kafka-extension-config-volume
+          configMap:
+            name: {{ include "hivemq.fullname" . }}-kafka-extension-config

@@ -1,0 +1,11 @@
+apiVersion: v2
+appVersion: v1.11.0
+description: MetOne Agent Simulator & Datahandler Helm chart
+home: https://phizzle.com
+maintainers:
+- email: phizzle@phizzle.com
+  name: Phizzle
+
+name: metone-simulator
+type: application
+version: 1.11.0

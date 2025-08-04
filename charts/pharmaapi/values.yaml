@@ -1,0 +1,38 @@
+actionManagerAPIURL: ""
+affinity: {}
+appVersion: 1.11.0
+config:
+  CP_MAX_SIZE: "5"
+  CP_MIN_SIZE: "1"
+  app_host: 0.0.0.0
+  app_port: "9001"
+  by_pass_authentication: "false"
+  expiry_limit: NA
+  log_level: WARN
+  pharma_api_access_key: PHAX355K3Y
+  pharma_api_private_key: pharma
+  pharma_api_secret_key: 5E637
+database:
+  database: merck
+  host: ""
+  password: tea
+  port: "5432"
+  username: postgres
+fullnameOverride: ""
+image:
+  pullPolicy: Always
+  repository: local-docker-registry:5001/api
+imagePullSecrets: []
+nameOverride: ""
+nodeSelector: {}
+podSecurityContext: {}
+replicaCount: 1
+resources: {}
+securityContext: {}
+service:
+  port: 80
+  type: LoadBalancer
+serviceAccount:
+  create: true
+  name: null
+tolerations: []

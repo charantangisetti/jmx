@@ -1,0 +1,11 @@
+apiVersion: v2
+appVersion: v1.11.0
+description: Lasair Datahandler Helm chart
+home: https://phizzle.com
+maintainers:
+- email: phizzle@phizzle.com
+  name: Phizzle
+
+name: lasair-datahandler
+type: application
+version: 1.11.0

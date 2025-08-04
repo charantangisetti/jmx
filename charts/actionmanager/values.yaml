@@ -1,0 +1,56 @@
+affinity: {}
+config:
+  CP_MAX_SIZE: "3"
+  CP_MIN_SIZE: "1"
+  app_host: 0.0.0.0
+  app_port: "3000"
+  by_pass_authentication: "false"
+  db_host: ""
+  db_name: merck
+  db_password: tea
+  db_port: "5432"
+  db_username: postgres
+  expiry_limit: NA
+  log_level: WARN
+  mail_enable: "false"
+  mail_from: testalert@phizzle.com
+  mail_host: email-smtp.us-east-1.amazonaws.com
+  mail_password: BL9IQKH9q5K3yNuZI4hHPzwYVGdCTfODbImWukt7YlNB
+  mail_port: "465"
+  mail_provider: SMTP
+  mail_user: AKIA3OGTPHXCMFGALJOS
+  mqtt_clean: "false"
+  mqtt_client_id: action-manager
+  mqtt_password: merck123
+  mqtt_port: "1883"
+  mqtt_request_topic: merck_pharma_action_request_2
+  mqtt_response_topic: merck_pharma_action_response
+  mqtt_topic: ALERT_TOPIC
+  mqtt_url: ""
+  mqtt_username: merck
+  pharma_api_access_key: kWvgRRhS6X
+  pharma_api_private_key: action
+  pharma_api_secret_key: nWNBD70VKC
+  pharma_api_url: ""
+  sms_enable: "false"
+  sms_key: 72ca39097ebf24bbc09f60c49700803a7eda5791
+  sms_url: http://www.phizzlemobile.com/external/send_sms.php
+  webex_access_token: YjA3MmI5NTQtZGViZS00NDE5LThkY2ItNzI5MGU4ZDQ4NzI0OWY4ZjcwM2YtYzI4_PF84_consumer
+  webex_enable: "false"
+  webex_room_id: Y2lzY29zcGFyazovL3VzL1JPT00vYzc1NDFjNzAtMGY3NS0xMWVhLTg4OWUtZjNkMTUzNDZmN2Ni
+fullnameOverride: ""
+image:
+  pullPolicy: Always
+  repository: local-docker-registry:5001/action-manager
+  tag: ""
+imagePullSecrets: []
+nameOverride: ""
+nodeSelector: {}
+podSecurityContext: {}
+replicaCount: 1
+resources: {}
+securityContext: {}
+service:
+  port: 80
+  type: LoadBalancer
+tolerations: []

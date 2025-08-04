@@ -1,0 +1,105 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnector
+metadata:
+  name: phizzle-opendb-connector
+  annotations:
+    "helm.sh/hook": post-install
+  labels:
+    strimzi.io/cluster: {{ include "kafkaconnect.fullname" . }}
+spec:
+  class: com.phizzle.stream.cpo.connect.PhizzlePharmaOpenDBSinkConnector
+  tasksMax: 1
+  config:
+    timescale.topics: merck-pharma-sampling-data
+    topics: merck-pharma-sampling-data
+    {{ if .Values.database.host -}}
+    timescale.host: {{ .Values.database.host | quote }}
+    {{- else -}}
+    timescale.host: "{{ .Release.Name }}-timescale.{{ .Release.Namespace }}.svc.cluster.local"
+    {{- end }}
+    timescale.port: {{ .Values.database.port | quote }}
+    timescale.schema: {{ .Values.database.schema | quote }}
+    timescale.user: {{ .Values.database.user | quote }}
+    timescale.password: {{ .Values.database.password | quote }}
+    kafka.port: {{ .Values.kafka.port | quote }}
+    {{ if .Values.kafka.host -}}
+    kafka.host: {{ .Values.kafka.host }}
+    {{- else -}}
+    kafka.host: {{ .Release.Name }}-kafkacluster-kafka-bootstrap
+    {{- end }}
+    key.converter: org.apache.kafka.connect.storage.StringConverter
+    value.converter: org.apache.kafka.connect.storage.StringConverter
+    key.converter.schemas.enable: 'false'
+    value.converter.schemas.enable: 'false'
+    {{ if .Values.redis.hosts -}}
+    redis.hosts: {{ .Values.redis.hosts | quote }}
+    {{- else -}}
+    redis.hosts: "{{ .Release.Name }}-redis-master.{{ .Release.Namespace }}.svc.cluster.local"
+    {{ end }}
+    redis.password: {{ .Values.redis.password | quote }}
+    timescale.minimumIdle: {{ .Values.config.minimumIdle | quote }}
+    timescale.maximumPoolSize: {{ .Values.config.maximumPoolSize | quote }}
+    errors.tolerance: all
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnector
+metadata:
+  name: phizzle-redis-connector
+  labels:
+    strimzi.io/cluster: {{ include "kafkaconnect.fullname" . }}
+spec:
+  class: com.phizzle.stream.cpr.connect.PhizzlePharmaRedisSinkConnector
+  tasksMax: 1
+  config:
+    topics: merck-pharma-heartbeat
+    tasks.max: '1'
+    key.converter: org.apache.kafka.connect.storage.StringConverter
+    value.converter: org.apache.kafka.connect.storage.StringConverter
+    {{ if .Values.redis.hosts -}}
+    redis.hosts: {{ .Values.redis.hosts | quote }}
+    {{- else -}}
+    redis.hosts: "{{ .Release.Name }}-redis-master.{{ .Release.Namespace }}.svc.cluster.local"
+    {{ end }}
+    redis.password: {{ .Values.redis.password | quote }}
+
+#######################
+#---
+#apiVersion: kafka.strimzi.io/v1beta2
+#kind: KafkaConnector
+#metadata:
+#  name: phizzle-sink
+#  labels:
+#    strimzi.io/cluster: {{ include "kafkaconnect.fullname" . }}
+#spec:
+#  class: com.phizzle.extension.mqtt.sink.Connector
+#  tasksMax: 1
+#  config:
+#    connector.class : "com.phizzle.extension.mqtt.sink.Connector"
+#    key.converter: :org.apache.kafka.connect.storage.StringConverter"
+#    value.converter: "org.apache.kafka.connect.storage.StringConverter"
+#    tasks.max : "1"
+#    mqtt.server.uri : "tcp://{{ .Release.Name }}-hivemq-mqtt.{{ .Release.Namespace }}.svc.cluster.local"
+#    mqtt.username : "merck"
+#    mqtt.password : "merck123"
+#    mqtt.client.id : "SINK_KAPIL"
+#    topics: "kone,ktwo,kthree"
+#    kafka.mqtt.mapping : "kone:mone:2,ktwo:mtwo:1,kthree:mthree:0"
+
+#---
+#apiVersion: kafka.strimzi.io/v1beta2
+#kind: KafkaConnector
+#metadata:
+#  name: phizzle-source
+#  labels:
+#    strimzi.io/cluster: {{ include "kafkaconnect.fullname" . }}
+#spec:
+#  class: com.phizzle.extension.mqtt.source.Connector
+#  tasksMax: 1
+#  config:
+#    connector.class : "com.phizzle.extension.mqtt.source.Connector"
+#    tasks.max : "1"
+#    mqtt.server.uri : "tcp://{{ .Release.Name }}-hivemq-mqtt.{{ .Release.Namespace }}.svc.cluster.local"
+#    mqtt.username : "merck"
+#    mqtt.password : "merck123"
+#    mqtt.client.id : "SOURCE_KAPIL"
+#    kafka.mqtt.mapping : "mqttone:kafkaone:2,mqtttwo:kafka2:1,mqtt3:kafka3:0"

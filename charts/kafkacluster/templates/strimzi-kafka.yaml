@@ -1,0 +1,17 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: {{ include "kafkacluster.fullname" . }}
+spec:
+  {{- with .Values.kafka }}
+  kafka:
+    {{- toYaml . | nindent 8 }}
+  {{- end }}
+  {{- with .Values.zookeeper }}
+  zookeeper:
+    {{- toYaml . | nindent 8 }}
+  {{- end }}
+  {{- with .Values.entityOperator }}
+  entityOperator:
+    {{- toYaml . | nindent 8 }}
+  {{- end }}

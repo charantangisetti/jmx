@@ -1,0 +1,11 @@
+apiVersion: v2
+appVersion: v1.11.0
+description: Discovery Service Helm chart for Kubernetes
+home: https://phizzle.com
+maintainers:
+- email: phizzle@phizzle.com
+  name: Phizzle
+  
+name: discovery
+type: application
+version: 1.11.0

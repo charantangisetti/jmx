@@ -1,0 +1,4 @@
+device_agent: ""
+image:
+  pullPolicy: Always
+  repository: local-docker-registry:5001/data-handler

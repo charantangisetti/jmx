@@ -1,0 +1,155 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "soapconnector.fullname" . }}
+  labels:
+    {{- include "soapconnector.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "soapconnector.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "soapconnector.selectorLabels" . | nindent 8 }}
+    spec:
+      # imagePullSecrets: 
+      #       - name: {{ .Values.imagePullSecrets }}
+      initContainers:
+        - name: wait-for-timescaledb
+          image: local-docker-registry:5001/k8s-wait-for:v1.6
+          imagePullPolicy: IfNotPresent
+          args:
+            - "pod"
+            - "-lapp=phziot-timescaledb,role=master"
+            - "--namespace"
+            - "{{ .Release.Namespace }}"
+        - name: wait-for-timescaledb-svc
+          image: local-docker-registry:5001/busybox:1.28
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for timescaledb service  to be available..."
+              until nslookup {{ .Release.Name }}-timescale.{{ .Release.Namespace }}.svc.cluster.local; do
+                echo " timescale service not ready, waiting 5 seconds..."
+                sleep 5
+              done
+              echo "timescale service is now available!"
+              echo "Checking if timescale is responding..."
+              until nc -z {{ .Release.Name }}-timescale.{{ .Release.Namespace }}.svc.cluster.local 5432; do
+                echo "timescale not responding on port 5432, waiting 5 seconds..."
+                sleep 5
+              done
+              echo "timescale is ready and responding!"
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 9001
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: db.host
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: db.port
+            - name: DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: db.username
+            - name: DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: db.password
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: db.name
+            - name: APP_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: app_host
+            - name: APP_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: app_port
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: log_level
+            - name: BY_PASS_AUTHENTICATION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: by_pass_authentication
+            - name: EXPIRY_LIMIT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: expiry_limit
+            - name: JWT_PRIVATE_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: pharma_api_private_key
+            - name: PHARMA_API_ACCESS_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: pharma_api_access_key
+            - name: PHARMA_API_SECRET_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: pharma_api_secret_key
+            - name: CP_MIN_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: CP_MIN_SIZE
+            - name: CP_MAX_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: CP_MAX_SIZE
+            - name: ALLOW_DEFAULT_SITE_ONLY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: ALLOW_DEFAULT_SITE_ONLY
+            - name: AUTO_SCHEDULED_DUE_DATE_FOR
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "soapconnector.fullname" . }}-config
+                  key: AUTO_SCHEDULED_DUE_DATE_FOR
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+

@@ -1,0 +1,5 @@
+datahandler:
+  image: local-docker-registry:5001/data-handler
+enabled: false
+lasairagent:
+  image: local-docker-registry:5001/particle_counter_simulator

@@ -1,0 +1,75 @@
+affinity: {}
+annotations: {}
+config:
+  autoKubernetesLabels: false
+  batchSize: 10240
+  batchWait: 1
+  k8sLoggingParser: "Off"
+  labelMap:
+    kubernetes:
+      container_name: container
+      host: node
+      labels:
+        app: app
+        release: release
+      namespace_name: namespace
+      pod_name: instance
+    stream: stream
+  labels: '{job="fluent-bit"}'
+  lineFormat: json
+  loglevel: warn
+  port: 2020
+  removeKeys:
+  - kubernetes
+  - stream
+  tenantID: '""'
+deploymentStrategy: RollingUpdate
+image:
+  pullPolicy: IfNotPresent
+  repository: grafana/fluent-bit-plugin-loki
+  tag: 1.5.0-amd64
+loki:
+  serviceName: ""
+  servicePath: /api/prom/push
+  servicePort: 3100
+  serviceScheme: http
+nameOverride: fluent-bit-loki
+nodeSelector: {}
+podAnnotations:
+  prometheus.io/path: /api/v1/metrics/prometheus
+  prometheus.io/port: "2020"
+  prometheus.io/scrape: "true"
+podLabels: {}
+rbac:
+  create: true
+  pspEnabled: true
+resources:
+  limits:
+    memory: 100Mi
+  requests:
+    cpu: 100m
+    memory: 100Mi
+serviceAccount:
+  create: true
+  name: null
+serviceMonitor:
+  additionalLabels: {}
+  annotations: {}
+  enabled: false
+  interval: ""
+tolerations:
+- effect: NoSchedule
+  key: node-role.kubernetes.io/master
+volumeMounts:
+- mountPath: /var/log
+  name: varlog
+- mountPath: /var/lib/docker/containers
+  name: varlibdockercontainers
+  readOnly: true
+volumes:
+- hostPath:
+    path: /var/log
+  name: varlog
+- hostPath:
+    path: /var/lib/docker/containers
+  name: varlibdockercontainers

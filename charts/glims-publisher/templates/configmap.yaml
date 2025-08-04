@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "glims-publisher.fullname" . }}-config
+data:
+  #Timescale Config
+  {{ if .Values.database.host -}}
+  db.host: {{ .Values.database.host | quote }}
+  {{- else -}}
+  db.host: "{{ .Release.Name }}-timescale.{{ .Release.Namespace }}.svc.cluster.local"
+  {{ end }}  
+  db.port: {{ .Values.database.port | quote }}
+  db.username: {{ .Values.database.username | quote }}
+  db.password: {{ .Values.database.password | quote }}
+  db.name: {{ .Values.database.database | quote }}
+  config.ftp_sync: {{ .Values.config.ftp_sync | quote }}
+  config.smb_host: {{ .Values.config.smb_host | quote }}
+  config.smb_username: {{ .Values.config.smb_username | quote }}
+  config.smb_password: {{ .Values.config.smb_password | quote }}
+  config.smb_path: {{ .Values.config.smb_path | quote }}
+  CP_MIN_SIZE: {{ .Values.config.CP_MIN_SIZE | quote }}
+  CP_MAX_SIZE: {{ .Values.config.CP_MAX_SIZE | quote }}
+  config.smb_share: {{ .Values.config.smb_share | quote }}
+  config.smb_domain: {{ .Values.config.smb_domain | quote }}
+  config.COMMA_SEPARATED_SAMPLE_TYPES_TO_BE_FILTERED: {{ .Values.config.COMMA_SEPARATED_SAMPLE_TYPES_TO_BE_FILTERED | quote }}
+  config.ENABLE_SAMPLE_TYPE_BACKFILL: {{ .Values.config.ENABLE_SAMPLE_TYPE_BACKFILL | quote }}

@@ -1,0 +1,259 @@
+{{- if .Values.dbFromScratch.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-db-init"
+  labels:
+    app: {{ template "phziot.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+  annotations:
+    "helm.sh/hook": "post-install"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: "{{ .Release.Name }}-db-init"
+      labels:
+        app: {{ template "phziot.fullname" . }}
+        release: "{{ .Release.Name }}"
+    spec:
+      restartPolicy: Never
+      initContainers:
+        - name: wait-for-timescaledb-master
+          image: local-docker-registry:5001/k8s-wait-for:v1.6
+          imagePullPolicy: Always
+          args:
+            - "pod"
+            - "-lapp=phziot-timescaledb,role=master"
+            - "--namespace"
+            - "{{ .Release.Namespace }}"
+        - name: wait-for-postgresql
+          image: "local-docker-registry:5001/busybox:1.31"
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              until printf "." && nc -z -w 2 {{ .Release.Name }}-timescale.{{ .Release.Namespace }}.svc.cluster.local 5432; do
+                  sleep 2;
+              done;
+              echo 'PostgreSQL OK ✓'
+      # imagePullSecrets: 
+      #       - name: {{ .Values.imagePullSecrets }}
+      containers:
+      - name: db-init-job
+        image: "{{ .Values.databasemigration.repository }}:{{ .Values.databasemigration.tag }}"
+        imagePullPolicy: Always
+        command:
+          - sh
+          - -c 
+          - |
+            echo 'Drop database'
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER -c "drop database if exists $DB_NAME;"
+            echo 'Successfully dropped database' &&
+            echo 'Create a new database' &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER -c "create database $DB_NAME;" &&
+            echo 'Created a new database' &&
+            echo 'Migrate schema into database' &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME < /single_script_schema_seed_data-1.11.0.sql &&
+            echo 'Successfully migrated schema into database' &&
+            
+            echo 'Create a new user for kafka' &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "CREATE USER $KAFKA_USER WITH PASSWORD '$KAFKA_PASSWORD';" &&
+            echo 'Created a new user for kafka' &&
+            echo 'Create a new user for pharma' &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "CREATE USER $PHARMA_USER WITH PASSWORD '$PHARMA_PASSWORD';" &&
+            echo 'Created a new user for pharma' &&
+            echo 'Create a new user for AM' &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "CREATE USER $AM_USER WITH PASSWORD '$AM_PASSWORD';" &&
+            echo 'Created a new user for AM' &&
+            echo 'Create a new user for Glims' &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "CREATE USER $GLIMS_USER WITH PASSWORD '$GLIMS_PASSWORD';" &&
+            echo 'Created a new user for Glims' &&
+            echo 'Create a new user for soap' &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "CREATE USER $SOAP_USER WITH PASSWORD '$SOAP_PASSWORD';" &&
+            echo 'Created a new user for soap' &&
+            echo 'Create a new user for cohesion' &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "CREATE USER $COHESION_USER WITH PASSWORD '$COHESION_PASSWORD';" &&
+            echo 'Created a new user for cohesion' &&
+            echo 'Create a new user for wso2' &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "CREATE USER $WSO2_USER WITH PASSWORD '$WSO2_PASSWORD';" &&
+            echo 'Created a new user for wso2' &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "grant connect on database "$DB_NAME" to $KAFKA_USER;" &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "grant connect on database "$DB_NAME" to $PHARMA_USER;" &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "grant connect on database "$DB_NAME" to $AM_USER;" &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "grant connect on database "$DB_NAME" to $GLIMS_USER;" &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "grant connect on database "$DB_NAME" to $SOAP_USER;" &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "grant connect on database "$DB_NAME" to $COHESION_USER;" &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "grant connect on database "$DB_NAME" to $WSO2_USER;" &&
+            echo 'Granted  connect permissions to all the users' &&
+            echo 'Grant R/W permissions to all the users on schema' &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO $KAFKA_USER;" && 
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO $PHARMA_USER;" && 
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO $AM_USER;" && 
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO $GLIMS_USER;" && 
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO $SOAP_USER;" &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO $COHESION_USER;" &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE audit_events TO $WSO2_USER;" &&
+            
+            echo 'Grant sequence permissions to all the users on schema' &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, UPDATE, USAGE ON ALL SEQUENCES IN SCHEMA public TO $KAFKA_USER;" && 
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, UPDATE, USAGE ON ALL SEQUENCES IN SCHEMA public TO $PHARMA_USER;" && 
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, UPDATE, USAGE ON ALL SEQUENCES IN SCHEMA public TO $AM_USER;" && 
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, UPDATE, USAGE ON ALL SEQUENCES IN SCHEMA public TO $GLIMS_USER;" && 
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, UPDATE, USAGE ON ALL SEQUENCES IN SCHEMA public TO $SOAP_USER;" &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, UPDATE, USAGE ON ALL SEQUENCES IN SCHEMA public TO $COHESION_USER;" &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, UPDATE, USAGE ON SEQUENCE audit_events_id_seq TO $WSO2_USER;"
+
+        env:
+        - name: DB_USER
+          value: "postgres"
+        - name: DB_NAME
+          value: "merck"
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-timescale-credentials
+              key: PATRONI_SUPERUSER_PASSWORD
+        - name: POSTGRES_HOST
+          value: {{ .Release.Name }}-timescale.{{ .Release.Namespace }}.svc.cluster.local
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: KAFKA_USER
+          value: "kafkaconnect"
+        - name: KAFKA_PASSWORD
+          value: "Y28kH6vSbAMFhkdN"
+        - name: PHARMA_USER
+          value: "pharmaapi"
+        - name: PHARMA_PASSWORD
+          value: "NJgU6h4YywMYauBG"
+        - name: AM_USER
+          value: "amapi"
+        - name: AM_PASSWORD
+          value: "S8Sw8zJum2RXrFPT"
+        - name: GLIMS_USER
+          value: "glims"
+        - name: GLIMS_PASSWORD
+          value: "PdK8m2rar8fpcxMM"
+        - name: SOAP_USER
+          value: "soap"
+        - name: SOAP_PASSWORD
+          value: "9t6fgJnE6NeK2Kyt"
+        - name: COHESION_USER
+          value: "cohesion"
+        - name: COHESION_PASSWORD
+          value: "2XBjUAgknVCP3zFf"
+        - name: WSO2_USER
+          value: "wso2"
+        - name: WSO2_PASSWORD
+          value: "EMK8mRCJrUce8gnR"
+{{- end -}}
+
+
+{{- if .Values.dbIncremental.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-db-init"
+  labels:
+    app: {{ template "phziot.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+  annotations:
+    "helm.sh/hook": "post-install"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: "{{ .Release.Name }}-db-init"
+      labels:
+        app: {{ template "phziot.fullname" . }}
+        release: "{{ .Release.Name }}"
+    spec:
+      restartPolicy: Never
+      initContainers:
+        - name: wait-for-postgresql
+          image: "local-docker-registry:5001/busybox:1.31"
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              until printf "." && nc -z -w 2 {{ .Release.Name }}-timescale.{{ .Release.Namespace }}.svc.cluster.local 5432; do
+                  sleep 2;
+              done;
+              echo 'PostgreSQL OK ✓'
+      # imagePullSecrets: 
+      #       - name: {{ .Values.imagePullSecrets }}
+      containers:
+      - name: db-init-job
+        image: "{{ .Values.databasemigration.repository }}:{{ .Values.databasemigration.tag }}"
+        imagePullPolicy: Always
+        command:
+          - sh
+          - -c 
+          - |
+            echo 'Migrate schema into database' &&
+            psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME < /incremental_patch_1.11.0.sql &&
+            echo 'Successfully migrated schema into database'
+
+            # echo 'Create a new user for cohesion' &&
+            # psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "CREATE USER $COHESION_USER WITH PASSWORD '$COHESION_PASSWORD';" &&
+            # echo 'Created a new user for cohesion' &&
+            # echo 'Create a new user for wso2' &&
+            # psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "CREATE USER $WSO2_USER WITH PASSWORD '$WSO2_PASSWORD';" &&
+            # echo 'Created a new user for wso2' &&
+            # psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "grant connect on database "$DB_NAME" to $COHESION_USER;" &&
+            # psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "grant connect on database "$DB_NAME" to $WSO2_USER;" &&
+            # psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT,INSERT,UPDATE,DELETE ON TABLE audit_events TO $WSO2_USER;" &&
+            # psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT,UPDATE,USAGE ON SEQUENCE audit_events_id_seq TO $WSO2_USER;" &&
+
+            # psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO $COHESION_USER;" &&
+            # psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $DB_USER $DB_NAME -c "GRANT SELECT, UPDATE, USAGE ON ALL SEQUENCES IN SCHEMA public TO $COHESION_USER;"
+            
+        env:
+        - name: DB_USER
+          value: "postgres"
+        - name: DB_NAME
+          value: "merck"
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-timescale-credentials
+              key: PATRONI_SUPERUSER_PASSWORD
+        - name: POSTGRES_HOST
+          value: {{ .Release.Name }}-timescale.{{ .Release.Namespace }}.svc.cluster.local
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: KAFKA_USER
+          value: "kafkaconnect"
+        - name: KAFKA_PASSWORD
+          value: "Y28kH6vSbAMFhkdN"
+        - name: PHARMA_USER
+          value: "pharmaapi"
+        - name: PHARMA_PASSWORD
+          value: "NJgU6h4YywMYauBG"
+        - name: AM_USER
+          value: "amapi"
+        - name: AM_PASSWORD
+          value: "S8Sw8zJum2RXrFPT"
+        - name: GLIMS_USER
+          value: "glims"
+        - name: GLIMS_PASSWORD
+          value: "PdK8m2rar8fpcxMM"
+        - name: SOAP_USER
+          value: "soap"
+        - name: SOAP_PASSWORD
+          value: "9t6fgJnE6NeK2Kyt"
+        - name: COHESION_USER
+          value: "cohesion"
+        - name: COHESION_PASSWORD
+          value: "2XBjUAgknVCP3zFf"
+        - name: WSO2_USER
+          value: "wso2"
+        - name: WSO2_PASSWORD
+          value: "EMK8mRCJrUce8gnR"
+{{- end -}}

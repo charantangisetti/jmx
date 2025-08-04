@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "discovery.fullname" . }}
+  labels:
+    {{- include "discovery.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "discovery.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "discovery.selectorLabels" . | nindent 8 }}
+    spec:
+      initContainers:
+      - name: init-hivemq-mqtt
+        image: local-docker-registry:5001/busybox:1.28
+        command: ['sh', '-c', "until nslookup {{ .Release.Name }}-hivemq-mqtt.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for hivemq broker; sleep 2; done"]
+      # imagePullSecrets: 
+      #       - name: {{ .Values.imagePullSecrets }}
+      initContainers:
+      - name: wait-for-actionmanager
+        image: local-docker-registry:5001/k8s-wait-for:v1.6
+        imagePullPolicy: IfNotPresent
+        args:
+          - "pod"
+          - "-lapp.kubernetes.io/name=actionmanager"
+          - "--namespace"
+          - "{{ .Release.Namespace }}"
+      - name: wait-for-actionmanager-svc
+        image: local-docker-registry:5001/busybox:1.28
+        imagePullPolicy: IfNotPresent
+        command:
+          - sh
+          - -c
+          - |
+            echo "Waiting for actionmanager service  to be available..."
+            until nslookup {{ .Release.Name }}-actionmanager.{{ .Release.Namespace }}.svc.cluster.local; do
+              echo " actionmanager service not ready, waiting 5 seconds..."
+              sleep 5
+            done
+            echo "actionmanager service is now available!"
+            echo "Checking if actionmanager is responding..."
+            until nc -z {{ .Release.Name }}-actionmanager.{{ .Release.Namespace }}.svc.cluster.local 80; do
+              echo "actionmanager not responding on port 80, waiting 5 seconds..."
+              sleep 5
+            done
+            echo "actionmanager is ready and responding!"
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: MQTT_DISCOVERY_QOS
+              value: '1'
+            - name: MQTT_HEARTBEAT_QOS
+              value: '0'
+            - name: HEARTBEAT_DELAY_TIME
+              value: '10'
+            - name: MQTT_DISCOVERY_CLIENT_ID
+              value: MQTT_DISCOVERY_DEV_001
+            - name: MQTT_USERNAME
+              value: merck
+            - name: MQTT_PASSWORD
+              value: merck123
+            - name: MQTT_MSG_THREAD_POOL
+              value: '100'
+            - name: DISCOVERY_API_PORT
+              value: '4567'
+            - name: LOG_VERBOSITY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "discovery.fullname" . }}-config
+                  key: log_verbosity
+            - name: MQTT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "discovery.fullname" . }}-config
+                  key: mqttbroker_url
+            - name: PROJECT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "discovery.fullname" . }}-config
+                  key: project
+            - name: API_ROOT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "discovery.fullname" . }}-config
+                  key: api_root
+            - name: DEVICE_UPDATE_PERIOD_HRS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "discovery.fullname" . }}-config
+                  key: DEVICE_UPDATE_PERIOD_HRS
+            - name: DEVICE_STATUS_UPDATE_PERIOD_MINS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "discovery.fullname" . }}-config
+                  key: DEVICE_STATUS_UPDATE_PERIOD_MINS
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+

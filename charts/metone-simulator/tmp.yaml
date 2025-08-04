@@ -1,0 +1,112 @@
+---
+# Source: metone-simulator/templates/config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: phziot-metone-simulator-config
+data:
+  mqtt_client_id: "METONE_SIM_DH_001"
+---
+# Source: metone-simulator/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phziot-metone-simulator
+  labels:
+    helm.sh/chart: metone-simulator-1.11.0
+    app.kubernetes.io/name: metone-simulator
+    app.kubernetes.io/instance: phziot
+    app.kubernetes.io/version: "v1.11.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: metone-simulator
+      app.kubernetes.io/instance: phziot
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: metone-simulator
+        app.kubernetes.io/instance: phziot
+    spec:
+      containers:
+      - name: sim-metone-agent
+        image: 786422513092.dkr.ecr.us-east-1.amazonaws.com/particle_counter_agent:v1.11.0
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            memory: "100Mi"
+            cpu: "100m"
+        ports:
+          - containerPort: 3000
+            name: agent-port
+        env:
+          - name: AGENT_API_PORT
+            value: "3000"
+          - name: AGENT_DEVICE_TYPE
+            value: "metone3400"
+          - name: AGENT_MODBUS_IP 
+            value: "127.0.0.1"
+          - name: AGENT_SIMULATION_MODE
+            value: "1"
+          - name: AGENT_LOG_LEVEL
+            value: "3"
+          - name: AGENT_MODBUS_PORT
+            value: "505"
+      - name: data-handler
+        image: 786422513092.dkr.ecr.us-east-1.amazonaws.com/efm-rep-proto/data-handler:v1.11.0
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "100m"
+        env:
+          - name: MQTT_DH_CLIENT_ID
+            valueFrom:
+              configMapKeyRef:
+                name: phziot-metone-simulator-config
+                key: mqtt_client_id
+          - name: MQTT_HEARTBEAT_QOS
+            value: '0'
+          - name: MQTT_DATA_ACK_QOS
+            value: '0'
+          - name: MQTT_SAMPLE_DATA_QOS
+            value: '2'
+          - name: MQTT_KEEP_ALIVE
+            value: '10'
+          - name: MQTT_MSG_THREAD_POOL
+            value: '10'
+          - name: MQTT_USERNAME
+            value: merck
+          - name: MQTT_PASSWORD
+            value: merck123
+          - name: MQTT_REQ_RES_QOS
+            value: '1'
+          - name: LOG_VERBOSITY
+            value: WARN
+          - name: MQTT_URL
+            value: 'tcp://vernemq:1883'
+          - name: PROJECT
+            value: MERCK_PHARMA
+          - name: API_ROOT
+            value: 'http://phziot-pharmaapi/api'
+          - name: DEVICE_AGENT
+            value: 'http://localhost:3000'
+          - name: RETRY_TIME
+            value: '5'
+          - name: HANDLER_TOTAL_LOGS_SIZE
+            value: 100MB
+          - name: SAMPLE_DATA_RETRY_COUNT
+            value: '10'
+          - name: SAMPLE_DATA_RETRY_TIME_SECS
+            value: '1'
+          - name: HANDLER_LOG_FILE_PATH
+            value: /data/logs
+          - name: HANDLER_LOG_MAX_SIZE
+            value: 10MB
+          - name: HANDLER_LOG_MAX_DAYS
+            value: '7'
+          - name: HEARTBEAT_INTERVAL
+            value: '1'
+          - name: HEARTBEAT_DELAY
+            value: '0'

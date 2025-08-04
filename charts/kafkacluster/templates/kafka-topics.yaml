@@ -1,0 +1,42 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic 
+metadata:
+  name: merck-pharma-sampling-data
+  labels:
+    strimzi.io/cluster: {{ include "kafkacluster.fullname" . }}
+spec:
+  partitions: 10
+  replicas: 3
+  config:
+    retention.ms: 259200000
+    segment.bytes: 1073741824
+
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic 
+metadata:
+  name: merck-pharma-heartbeat
+  labels:
+    strimzi.io/cluster: {{ include "kafkacluster.fullname" . }}
+spec:
+  partitions: 10
+  replicas: 3
+  config:
+    retention.ms: 3600000
+    segment.bytes: 1073741824
+ 
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic 
+metadata:
+  name: merck-pharma-sampling-data-ack
+  #name: merck-pharma-sampling-data-ack---88675dad094f0d30e83ef251278e8cc522892011
+  labels:
+    strimzi.io/cluster: {{ include "kafkacluster.fullname" . }}
+spec:
+  partitions: 10
+  replicas: 3
+  config:
+    retention.ms: 3600000
+    segment.bytes: 1073741824
+ 

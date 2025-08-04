@@ -1,0 +1,11 @@
+apiVersion: v2
+appVersion: v1.11.0
+description: Soap Connector Helm chart for Kubernetes
+home: https://phizzle.com
+maintainers:
+- email: phizzle@phizzle.com
+  name: Phizzle
+  
+name: soapconnector
+type: application
+version: 1.11.0

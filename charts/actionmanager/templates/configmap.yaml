@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "actionmanager.fullname" . }}-config
+data:
+  #Action Manager Config
+  action_manager.app_host: {{ .Values.config.app_host | quote }}
+  action_manager.app_port: {{ .Values.config.app_port | quote }}
+  action_manager.sms_url: {{ .Values.config.sms_url | quote }}
+  action_manager.sms_key: {{ .Values.config.sms_key | quote }}
+  action_manager.webex_room_id: {{ .Values.config.webex_room_id | quote }}
+  action_manager.webex_access_token: {{ .Values.config.webex_access_token | quote }}
+  {{ if .Values.config.mqtt_url -}}
+  action_manager.mqtt_url: {{ .Values.config.mqtt_url | quote }}
+  {{- else -}}
+  action_manager.mqtt_url: "tcp://{{ .Release.Name }}-hivemq-mqtt.{{ .Release.Namespace }}.svc.cluster.local"
+  {{ end }}
+  action_manager.mqtt_port: {{ .Values.config.mqtt_port | quote }}
+  action_manager.mqtt_topic: {{ .Values.config.mqtt_topic | quote }}
+  action_manager.mqtt_request_topic: {{ .Values.config.mqtt_request_topic | quote }}
+  action_manager.mqtt_response_topic: {{ .Values.config.mqtt_response_topic | quote }}
+  action_manager.mqtt_client_id: {{ .Values.config.mqtt_client_id | quote }}
+  action_manager.mail_provider: {{ .Values.config.mail_provider | quote }}
+  action_manager.mail_host: {{ .Values.config.mail_host | quote }}
+  action_manager.mail_user: {{ .Values.config.mail_user | quote }}
+  action_manager.mail_password: {{ .Values.config.mail_password | quote }}
+  action_manager.mail_port: {{ .Values.config.mail_port | quote }}
+  action_manager.mail_from: {{ .Values.config.mail_from | quote }}
+  action_manager.pharma_api_private_key: {{ .Values.config.pharma_api_private_key | quote }}
+  action_manager.pharma_api_access_key: {{ .Values.config.pharma_api_access_key | quote }}
+  action_manager.pharma_api_secret_key: {{ .Values.config.pharma_api_secret_key | quote }}
+  {{ if .Values.config.pharma_api_url -}}
+  action_manager.pharma_api_url: {{ .Values.config.pharma_api_url | quote }}
+  {{- else -}}
+  action_manager.pharma_api_url: "http://{{ .Release.Name }}-pharmaapi.{{ .Release.Namespace }}.svc.cluster.local/api/v1/audit-event"
+  {{ end }}
+  {{ if .Values.config.db_host -}}
+  db.host: {{ .Values.config.db_host | quote }}
+  {{- else -}}
+  db.host: "{{ .Release.Name }}-timescale.{{ .Release.Namespace }}.svc.cluster.local"
+  {{ end }}
+  db.port: {{ .Values.config.db_port | quote }}
+  db.username: {{ .Values.config.db_username | quote }}
+  db.password: {{ .Values.config.db_password | quote }}
+  db.name: {{ .Values.config.db_name | quote }}
+  mqtt_username: {{ .Values.config.mqtt_username | quote }}
+  mqtt_password: {{ .Values.config.mqtt_password | quote }}
+  mqtt_clean: {{ .Values.config.mqtt_clean | quote }}
+  expiry_limit: {{ .Values.config.expiry_limit | quote }}
+  log_level: {{ .Values.config.log_level | quote }}
+  by_pass_authentication: {{ .Values.config.by_pass_authentication | quote }}
+  mail_enable: {{ .Values.config.mail_enable | quote }}
+  sms_enable: {{ .Values.config.sms_enable | quote }}
+  webex_enable: {{ .Values.config.webex_enable | quote }}
+  CP_MIN_SIZE: {{ .Values.config.CP_MIN_SIZE | quote }}
+  CP_MAX_SIZE: {{ .Values.config.CP_MAX_SIZE | quote }}
