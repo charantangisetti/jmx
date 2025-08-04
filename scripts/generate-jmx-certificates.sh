@@ -33,12 +33,12 @@ openssl req -new -x509 -keyout ca-key.pem -out ca-cert.pem -days $VALIDITY_DAYS 
 
 # Generate server key and certificate request
 echo "Generating server key and certificate request..."
-keytool -keystore jmx-keystore.jks -alias kafka-jmx -validity $VALIDITY_DAYS -genkey -keyalg RSA \
+keytool -keystore keystore.jks -alias kafka-jmx -validity $VALIDITY_DAYS -genkey -keyalg RSA \
     -storepass $KEYSTORE_PASSWORD -keypass $KEY_PASSWORD \
     -dname "CN=$COMMON_NAME, OU=$ORGANIZATIONAL_UNIT, O=$ORGANIZATION, L=$LOCALITY, ST=$STATE, C=$COUNTRY"
 
 # Export the certificate request
-keytool -keystore jmx-keystore.jks -alias kafka-jmx -certreq -file jmx-cert-req.csr \
+keytool -keystore keystore.jks -alias kafka-jmx -certreq -file jmx-cert-req.csr \
     -storepass $KEYSTORE_PASSWORD -keypass $KEY_PASSWORD
 
 # Sign the certificate with CA
@@ -48,17 +48,17 @@ openssl x509 -req -CA ca-cert.pem -CAkey ca-key.pem -in jmx-cert-req.csr -out jm
 
 # Import CA certificate to keystore
 echo "Importing CA certificate to keystore..."
-keytool -keystore jmx-keystore.jks -alias CARoot -import -file ca-cert.pem \
+keytool -keystore keystore.jks -alias CARoot -import -file ca-cert.pem \
     -storepass $KEYSTORE_PASSWORD -noprompt
 
 # Import signed certificate to keystore
 echo "Importing signed certificate to keystore..."
-keytool -keystore jmx-keystore.jks -alias kafka-jmx -import -file jmx-cert-signed.pem \
+keytool -keystore keystore.jks -alias kafka-jmx -import -file jmx-cert-signed.pem \
     -storepass $KEYSTORE_PASSWORD -noprompt
 
 # Create truststore and import CA certificate
 echo "Creating truststore..."
-keytool -keystore jmx-truststore.jks -alias CARoot -import -file ca-cert.pem \
+keytool -keystore truststore.jks -alias CARoot -import -file ca-cert.pem \
     -storepass $TRUSTSTORE_PASSWORD -noprompt
 
 # Generate client certificate for JMX access (optional)
@@ -85,8 +85,8 @@ keytool -keystore jmx-client-keystore.jks -alias jmx-client -import -file jmx-cl
 echo ""
 echo "Certificate generation completed!"
 echo "Generated files:"
-echo "  - jmx-keystore.jks (Server keystore)"
-echo "  - jmx-truststore.jks (Truststore)"
+echo "  - keystore.jks (Server keystore)"
+echo "  - truststore.jks (Truststore)"
 echo "  - jmx-client-keystore.jks (Client keystore for JMX access)"
 echo "  - ca-cert.pem (CA certificate)"
 echo ""
@@ -96,19 +96,19 @@ echo "  Truststore password: $TRUSTSTORE_PASSWORD"
 echo ""
 echo "To create Kubernetes secrets, run:"
 echo ""
-echo "kubectl create secret generic kafka-jmx-certs -n $NAMESPACE \\"
-echo "  --from-file=jmx-keystore.jks=$CERT_DIR/jmx-keystore.jks \\"
-echo "  --from-file=jmx-truststore.jks=$CERT_DIR/jmx-truststore.jks"
+echo "kubectl create secret generic phziot-kafkacluster-jmx-certs -n $NAMESPACE \\"
+echo "  --from-file=keystore.jks=$CERT_DIR/keystore.jks \\"
+echo "  --from-file=truststore.jks=$CERT_DIR/truststore.jks"
 echo ""
-echo "kubectl create secret generic kafka-jmx-passwords -n $NAMESPACE \\"
+echo "kubectl create secret generic phziot-kafkacluster-jmx-passwords -n $NAMESPACE \\"
 echo "  --from-literal=JMX_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD \\"
 echo "  --from-literal=JMX_TRUSTSTORE_PASSWORD=$TRUSTSTORE_PASSWORD"
 echo ""
 echo "For values.yaml configuration:"
 echo ""
 echo "jmxCertificates:"
-echo "  keystore: $(base64 -w 0 jmx-keystore.jks)"
-echo "  truststore: $(base64 -w 0 jmx-truststore.jks)"
+echo "  keystore: $(base64 -w 0 keystore.jks)"
+echo "  truststore: $(base64 -w 0 truststore.jks)"
 echo ""
 echo "jmxPasswords:"
 echo "  keystorePassword: $KEYSTORE_PASSWORD"
