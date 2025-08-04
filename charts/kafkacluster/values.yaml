@@ -32,6 +32,9 @@ kafka:
   jvmOptions:
     "-Xmx": "2G"
     "-Xms": "2G"
+    "-XX":
+      "+UseG1GC": "true"
+      "MaxGCPauseMillis": "20"
     javaSystemProperties:
       - name: "com.sun.management.jmxremote"
         value: "true"
@@ -75,6 +78,8 @@ zookeeper:
   jvmOptions:
     "-Xmx": "1G"
     "-Xms": "1G"
+    "-XX":
+      "+UseG1GC": "true"
     javaSystemProperties:
       - name: "com.sun.management.jmxremote"
         value: "true"
