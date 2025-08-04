@@ -32,16 +32,17 @@ kafka:
   jvmOptions:
     "-Xmx": "2G"
     "-Xms": "2G"
-    "-Dcom.sun.management.jmxremote": "true"
-    "-Dcom.sun.management.jmxremote.port": "9999"
-    "-Dcom.sun.management.jmxremote.rmi.port": "9999"
-    "-Dcom.sun.management.jmxremote.ssl": "true"
-    "-Dcom.sun.management.jmxremote.registry.ssl": "true"
-    "-Dcom.sun.management.jmxremote.ssl.need.client.auth": "true"
-    "-Djavax.net.ssl.keyStore": "/opt/kafka/certificates/jmx-keystore.jks"
-    "-Djavax.net.ssl.keyStorePassword": "${JMX_KEYSTORE_PASSWORD}"
-    "-Djavax.net.ssl.trustStore": "/opt/kafka/certificates/jmx-truststore.jks"
-    "-Djavax.net.ssl.trustStorePassword": "${JMX_TRUSTSTORE_PASSWORD}"
+    "-D":
+      "com.sun.management.jmxremote": "true"
+      "com.sun.management.jmxremote.port": "9999"
+      "com.sun.management.jmxremote.rmi.port": "9999"
+      "com.sun.management.jmxremote.ssl": "true"
+      "com.sun.management.jmxremote.registry.ssl": "true"
+      "com.sun.management.jmxremote.ssl.need.client.auth": "true"
+      "javax.net.ssl.keyStore": "/opt/kafka/certificates/jmx-keystore.jks"
+      "javax.net.ssl.keyStorePassword": "${JMX_KEYSTORE_PASSWORD}"
+      "javax.net.ssl.trustStore": "/opt/kafka/certificates/jmx-truststore.jks"
+      "javax.net.ssl.trustStorePassword": "${JMX_TRUSTSTORE_PASSWORD}"
   # Metrics configuration for Prometheus JMX Exporter
   metricsConfig:
     type: jmxPrometheusExporter
@@ -64,16 +65,17 @@ zookeeper:
   jvmOptions:
     "-Xmx": "1G"
     "-Xms": "1G"
-    "-Dcom.sun.management.jmxremote": "true"
-    "-Dcom.sun.management.jmxremote.port": "9998"
-    "-Dcom.sun.management.jmxremote.rmi.port": "9998"
-    "-Dcom.sun.management.jmxremote.ssl": "true"
-    "-Dcom.sun.management.jmxremote.registry.ssl": "true"
-    "-Dcom.sun.management.jmxremote.ssl.need.client.auth": "true"
-    "-Djavax.net.ssl.keyStore": "/opt/kafka/certificates/jmx-keystore.jks"
-    "-Djavax.net.ssl.keyStorePassword": "${JMX_KEYSTORE_PASSWORD}"
-    "-Djavax.net.ssl.trustStore": "/opt/kafka/certificates/jmx-truststore.jks"
-    "-Djavax.net.ssl.trustStorePassword": "${JMX_TRUSTSTORE_PASSWORD}"
+    "-D":
+      "com.sun.management.jmxremote": "true"
+      "com.sun.management.jmxremote.port": "9998"
+      "com.sun.management.jmxremote.rmi.port": "9998"
+      "com.sun.management.jmxremote.ssl": "true"
+      "com.sun.management.jmxremote.registry.ssl": "true"
+      "com.sun.management.jmxremote.ssl.need.client.auth": "true"
+      "javax.net.ssl.keyStore": "/opt/kafka/certificates/jmx-keystore.jks"
+      "javax.net.ssl.keyStorePassword": "${JMX_KEYSTORE_PASSWORD}"
+      "javax.net.ssl.trustStore": "/opt/kafka/certificates/jmx-truststore.jks"
+      "javax.net.ssl.trustStorePassword": "${JMX_TRUSTSTORE_PASSWORD}"
 
 # JMX SSL Certificates
 # Generate these using scripts/generate-jmx-certificates.sh

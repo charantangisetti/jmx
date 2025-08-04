@@ -3,16 +3,44 @@ kind: Kafka
 metadata:
   name: {{ include "kafkacluster.fullname" . }}
 spec:
-  {{- with .Values.kafka }}
   kafka:
-    {{- toYaml . | nindent 4 }}
-    {{- if $.Values.jmxCertificates }}
+    {{- if .Values.kafka.replicas }}
+    replicas: {{ .Values.kafka.replicas }}
+    {{- end }}
+    {{- if .Values.kafka.version }}
+    version: {{ .Values.kafka.version }}
+    {{- end }}
+    {{- if .Values.kafka.config }}
+    config:
+      {{- toYaml .Values.kafka.config | nindent 6 }}
+    {{- end }}
+    {{- if .Values.kafka.listeners }}
+    listeners:
+      {{- toYaml .Values.kafka.listeners | nindent 6 }}
+    {{- end }}
+    {{- if .Values.kafka.storage }}
+    storage:
+      {{- toYaml .Values.kafka.storage | nindent 6 }}
+    {{- end }}
+    {{- if .Values.kafka.jmxOptions }}
+    jmxOptions:
+      {{- toYaml .Values.kafka.jmxOptions | nindent 6 }}
+    {{- end }}
+    {{- if .Values.kafka.jvmOptions }}
+    jvmOptions:
+      {{- toYaml .Values.kafka.jvmOptions | nindent 6 }}
+    {{- end }}
+    {{- if .Values.kafka.metricsConfig }}
+    metricsConfig:
+      {{- toYaml .Values.kafka.metricsConfig | nindent 6 }}
+    {{- end }}
+    {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
     template:
       pod:
         volumes:
           - name: jmx-certificates
             secret:
-              secretName: {{ include "kafkacluster.fullname" $ }}-jmx-certs
+              secretName: {{ include "kafkacluster.fullname" . }}-jmx-certs
         containers:
           - name: kafka
             volumeMounts:
@@ -23,25 +51,37 @@ spec:
               - name: JMX_KEYSTORE_PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: {{ include "kafkacluster.fullname" $ }}-jmx-passwords
+                    name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
                     key: JMX_KEYSTORE_PASSWORD
               - name: JMX_TRUSTSTORE_PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: {{ include "kafkacluster.fullname" $ }}-jmx-passwords
+                    name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
                     key: JMX_TRUSTSTORE_PASSWORD
     {{- end }}
-  {{- end }}
-  {{- with .Values.zookeeper }}
   zookeeper:
-    {{- toYaml . | nindent 4 }}
-    {{- if $.Values.jmxCertificates }}
+    {{- if .Values.zookeeper.replicas }}
+    replicas: {{ .Values.zookeeper.replicas }}
+    {{- end }}
+    {{- if .Values.zookeeper.storage }}
+    storage:
+      {{- toYaml .Values.zookeeper.storage | nindent 6 }}
+    {{- end }}
+    {{- if .Values.zookeeper.jmxOptions }}
+    jmxOptions:
+      {{- toYaml .Values.zookeeper.jmxOptions | nindent 6 }}
+    {{- end }}
+    {{- if .Values.zookeeper.jvmOptions }}
+    jvmOptions:
+      {{- toYaml .Values.zookeeper.jvmOptions | nindent 6 }}
+    {{- end }}
+    {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
     template:
       pod:
         volumes:
           - name: jmx-certificates
             secret:
-              secretName: {{ include "kafkacluster.fullname" $ }}-jmx-certs
+              secretName: {{ include "kafkacluster.fullname" . }}-jmx-certs
         containers:
           - name: zookeeper
             volumeMounts:
@@ -52,16 +92,15 @@ spec:
               - name: JMX_KEYSTORE_PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: {{ include "kafkacluster.fullname" $ }}-jmx-passwords
+                    name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
                     key: JMX_KEYSTORE_PASSWORD
               - name: JMX_TRUSTSTORE_PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: {{ include "kafkacluster.fullname" $ }}-jmx-passwords
+                    name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
                     key: JMX_TRUSTSTORE_PASSWORD
     {{- end }}
-  {{- end }}
-  {{- with .Values.entityOperator }}
+  {{- if .Values.entityOperator }}
   entityOperator:
-    {{- toYaml . | nindent 4 }}
+    {{- toYaml .Values.entityOperator | nindent 4 }}
   {{- end }}
