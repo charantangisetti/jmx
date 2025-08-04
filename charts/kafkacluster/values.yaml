@@ -25,6 +25,30 @@ kafka:
     size: 10Gi
     type: persistent-claim
   version: 3.9.0
+  # JMX configuration with SSL
+  jmxOptions:
+    authentication:
+      type: password
+  jvmOptions:
+    "-Xmx": "2G"
+    "-Xms": "2G"
+    "-Dcom.sun.management.jmxremote": "true"
+    "-Dcom.sun.management.jmxremote.port": "9999"
+    "-Dcom.sun.management.jmxremote.rmi.port": "9999"
+    "-Dcom.sun.management.jmxremote.ssl": "true"
+    "-Dcom.sun.management.jmxremote.registry.ssl": "true"
+    "-Dcom.sun.management.jmxremote.ssl.need.client.auth": "true"
+    "-Djavax.net.ssl.keyStore": "/opt/kafka/certificates/jmx-keystore.jks"
+    "-Djavax.net.ssl.keyStorePassword": "${JMX_KEYSTORE_PASSWORD}"
+    "-Djavax.net.ssl.trustStore": "/opt/kafka/certificates/jmx-truststore.jks"
+    "-Djavax.net.ssl.trustStorePassword": "${JMX_TRUSTSTORE_PASSWORD}"
+  # Metrics configuration for Prometheus JMX Exporter
+  metricsConfig:
+    type: jmxPrometheusExporter
+    valueFrom:
+      configMapKeyRef:
+        name: kafka-metrics
+        key: kafka-metrics-config.yml
 strimzi-kafka-operator:
   watchAnyNamespace: true
 zookeeper:
@@ -33,3 +57,33 @@ zookeeper:
     deleteClaim: false
     size: 10Gi
     type: persistent-claim
+  # JMX configuration with SSL for Zookeeper
+  jmxOptions:
+    authentication:
+      type: password
+  jvmOptions:
+    "-Xmx": "1G"
+    "-Xms": "1G"
+    "-Dcom.sun.management.jmxremote": "true"
+    "-Dcom.sun.management.jmxremote.port": "9998"
+    "-Dcom.sun.management.jmxremote.rmi.port": "9998"
+    "-Dcom.sun.management.jmxremote.ssl": "true"
+    "-Dcom.sun.management.jmxremote.registry.ssl": "true"
+    "-Dcom.sun.management.jmxremote.ssl.need.client.auth": "true"
+    "-Djavax.net.ssl.keyStore": "/opt/kafka/certificates/jmx-keystore.jks"
+    "-Djavax.net.ssl.keyStorePassword": "${JMX_KEYSTORE_PASSWORD}"
+    "-Djavax.net.ssl.trustStore": "/opt/kafka/certificates/jmx-truststore.jks"
+    "-Djavax.net.ssl.trustStorePassword": "${JMX_TRUSTSTORE_PASSWORD}"
+
+# JMX SSL Certificates
+# Generate these using scripts/generate-jmx-certificates.sh
+jmxCertificates:
+  # Base64 encoded keystore file
+  keystore: ""
+  # Base64 encoded truststore file  
+  truststore: ""
+
+# JMX Passwords
+jmxPasswords:
+  keystorePassword: ""
+  truststorePassword: ""

@@ -5,13 +5,63 @@ metadata:
 spec:
   {{- with .Values.kafka }}
   kafka:
-    {{- toYaml . | nindent 8 }}
+    {{- toYaml . | nindent 4 }}
+    {{- if $.Values.jmxCertificates }}
+    template:
+      pod:
+        volumes:
+          - name: jmx-certificates
+            secret:
+              secretName: {{ include "kafkacluster.fullname" $ }}-jmx-certs
+        containers:
+          - name: kafka
+            volumeMounts:
+              - name: jmx-certificates
+                mountPath: /opt/kafka/certificates
+                readOnly: true
+            env:
+              - name: JMX_KEYSTORE_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ include "kafkacluster.fullname" $ }}-jmx-passwords
+                    key: JMX_KEYSTORE_PASSWORD
+              - name: JMX_TRUSTSTORE_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ include "kafkacluster.fullname" $ }}-jmx-passwords
+                    key: JMX_TRUSTSTORE_PASSWORD
+    {{- end }}
   {{- end }}
   {{- with .Values.zookeeper }}
   zookeeper:
-    {{- toYaml . | nindent 8 }}
+    {{- toYaml . | nindent 4 }}
+    {{- if $.Values.jmxCertificates }}
+    template:
+      pod:
+        volumes:
+          - name: jmx-certificates
+            secret:
+              secretName: {{ include "kafkacluster.fullname" $ }}-jmx-certs
+        containers:
+          - name: zookeeper
+            volumeMounts:
+              - name: jmx-certificates
+                mountPath: /opt/kafka/certificates
+                readOnly: true
+            env:
+              - name: JMX_KEYSTORE_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ include "kafkacluster.fullname" $ }}-jmx-passwords
+                    key: JMX_KEYSTORE_PASSWORD
+              - name: JMX_TRUSTSTORE_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ include "kafkacluster.fullname" $ }}-jmx-passwords
+                    key: JMX_TRUSTSTORE_PASSWORD
+    {{- end }}
   {{- end }}
   {{- with .Values.entityOperator }}
   entityOperator:
-    {{- toYaml . | nindent 8 }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
