@@ -19,9 +19,10 @@ ORGANIZATION="Organization"
 ORGANIZATIONAL_UNIT="IT"
 COMMON_NAME="kafka-jmx"
 
-# Create temporary directory for certificate generation
-CERT_DIR=$(mktemp -d)
-echo "Working in temporary directory: $CERT_DIR"
+# Create persistent directory for certificate storage
+CERT_DIR="$(pwd)/certs"
+mkdir -p $CERT_DIR
+echo "Storing certificates in: $CERT_DIR"
 
 cd $CERT_DIR
 
@@ -104,14 +105,22 @@ echo "kubectl create secret generic phziot-kafkacluster-jmx-passwords -n $NAMESP
 echo "  --from-literal=JMX_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD \\"
 echo "  --from-literal=JMX_TRUSTSTORE_PASSWORD=$TRUSTSTORE_PASSWORD"
 echo ""
+# Generate password files
+echo "$KEYSTORE_PASSWORD" > keystore.password
+echo "$TRUSTSTORE_PASSWORD" > truststore.password
+echo "$(openssl rand -base64 16)" > monitor.password
+echo "$(openssl rand -base64 16)" > control.password
+
 echo "For values.yaml configuration:"
 echo ""
 echo "jmxCertificates:"
-echo "  keystore: $(base64 -w 0 keystore.jks)"
-echo "  truststore: $(base64 -w 0 truststore.jks)"
+echo "  keystorePath: \"$CERT_DIR/keystore.jks\""
+echo "  truststorePath: \"$CERT_DIR/truststore.jks\""
 echo ""
 echo "jmxPasswords:"
-echo "  keystorePassword: $KEYSTORE_PASSWORD"
-echo "  truststorePassword: $TRUSTSTORE_PASSWORD"
+echo "  keystorePasswordPath: \"$CERT_DIR/keystore.password\""
+echo "  truststorePasswordPath: \"$CERT_DIR/truststore.password\""
+echo "  monitorPasswordPath: \"$CERT_DIR/monitor.password\""
+echo "  controlPasswordPath: \"$CERT_DIR/control.password\""
 echo ""
 echo "Client keystore for JMX access: $CERT_DIR/jmx-client-keystore.jks"
