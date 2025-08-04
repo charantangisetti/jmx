@@ -49,11 +49,11 @@ spec:
         volumeMounts:
           {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
           - name: jmx-certificates
-            mountPath: /opt/kafka/certificates
+            mountPath: /mnt/jmx-certificates
             readOnly: true
           {{- end }}
           - name: jmx-ssl-config
-            mountPath: /opt/kafka/jmx
+            mountPath: /mnt/jmx-ssl-config
             readOnly: true
         env:
           {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
@@ -99,11 +99,11 @@ spec:
         volumeMounts:
           {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
           - name: jmx-certificates
-            mountPath: /opt/kafka/certificates
+            mountPath: /mnt/jmx-certificates
             readOnly: true
           {{- end }}
           - name: jmx-ssl-config
-            mountPath: /opt/kafka/jmx
+            mountPath: /mnt/jmx-ssl-config
             readOnly: true
         env:
           {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}

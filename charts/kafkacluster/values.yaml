@@ -37,15 +37,15 @@ kafka:
       "MaxGCPauseMillis": "20"
     javaSystemProperties:
       - name: "javax.net.ssl.keyStore"
-        value: "/opt/kafka/certificates/jmx-keystore.jks"
+        value: "/mnt/jmx-certificates/jmx-keystore.jks"
       - name: "javax.net.ssl.keyStorePassword"
         value: "${JMX_KEYSTORE_PASSWORD}"
       - name: "javax.net.ssl.trustStore"
-        value: "/opt/kafka/certificates/jmx-truststore.jks"
+        value: "/mnt/jmx-certificates/jmx-truststore.jks"
       - name: "javax.net.ssl.trustStorePassword"
         value: "${JMX_TRUSTSTORE_PASSWORD}"
       - name: "com.sun.management.jmxremote.ssl.config.file"
-        value: "/opt/kafka/jmx/jmx.ssl.properties"
+        value: "/mnt/jmx-ssl-config/jmx.ssl.properties"
   # Metrics configuration for Prometheus JMX Exporter
   metricsConfig:
     type: jmxPrometheusExporter
@@ -72,15 +72,15 @@ zookeeper:
       "UseG1GC": "true"
     javaSystemProperties:
       - name: "javax.net.ssl.keyStore"
-        value: "/opt/kafka/certificates/jmx-keystore.jks"
+        value: "/mnt/jmx-certificates/jmx-keystore.jks"
       - name: "javax.net.ssl.keyStorePassword"
         value: "${JMX_KEYSTORE_PASSWORD}"
       - name: "javax.net.ssl.trustStore"
-        value: "/opt/kafka/certificates/jmx-truststore.jks"
+        value: "/mnt/jmx-certificates/jmx-truststore.jks"
       - name: "javax.net.ssl.trustStorePassword"
         value: "${JMX_TRUSTSTORE_PASSWORD}"
       - name: "com.sun.management.jmxremote.ssl.config.file"
-        value: "/opt/kafka/jmx/jmx.ssl.properties"
+        value: "/mnt/jmx-ssl-config/jmx.ssl.properties"
 
 # JMX SSL Certificates
 # Generate these using scripts/generate-jmx-certificates.sh
