@@ -45,30 +45,29 @@ spec:
           - name: jmx-ssl-config
             configMap:
               name: {{ include "kafkacluster.fullname" . }}-jmx-ssl-config
-        containers:
-          - name: kafka
-            volumeMounts:
-              {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
-              - name: jmx-certificates
-                mountPath: /opt/kafka/certificates
-                readOnly: true
-              {{- end }}
-              - name: jmx-ssl-config
-                mountPath: /opt/kafka/jmx
-                readOnly: true
-            env:
-              {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
-              - name: JMX_KEYSTORE_PASSWORD
-                valueFrom:
-                  secretKeyRef:
-                    name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
-                    key: JMX_KEYSTORE_PASSWORD
-              - name: JMX_TRUSTSTORE_PASSWORD
-                valueFrom:
-                  secretKeyRef:
-                    name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
-                    key: JMX_TRUSTSTORE_PASSWORD
-              {{- end }}
+      kafkaContainer:
+        volumeMounts:
+          {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
+          - name: jmx-certificates
+            mountPath: /opt/kafka/certificates
+            readOnly: true
+          {{- end }}
+          - name: jmx-ssl-config
+            mountPath: /opt/kafka/jmx
+            readOnly: true
+        env:
+          {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
+          - name: JMX_KEYSTORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
+                key: JMX_KEYSTORE_PASSWORD
+          - name: JMX_TRUSTSTORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
+                key: JMX_TRUSTSTORE_PASSWORD
+          {{- end }}
   zookeeper:
     {{- if .Values.zookeeper.replicas }}
     replicas: {{ .Values.zookeeper.replicas }}
@@ -96,30 +95,29 @@ spec:
           - name: jmx-ssl-config
             configMap:
               name: {{ include "kafkacluster.fullname" . }}-jmx-ssl-config
-        containers:
-          - name: zookeeper
-            volumeMounts:
-              {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
-              - name: jmx-certificates
-                mountPath: /opt/kafka/certificates
-                readOnly: true
-              {{- end }}
-              - name: jmx-ssl-config
-                mountPath: /opt/kafka/jmx
-                readOnly: true
-            env:
-              {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
-              - name: JMX_KEYSTORE_PASSWORD
-                valueFrom:
-                  secretKeyRef:
-                    name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
-                    key: JMX_KEYSTORE_PASSWORD
-              - name: JMX_TRUSTSTORE_PASSWORD
-                valueFrom:
-                  secretKeyRef:
-                    name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
-                    key: JMX_TRUSTSTORE_PASSWORD
-              {{- end }}
+      zookeeperContainer:
+        volumeMounts:
+          {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
+          - name: jmx-certificates
+            mountPath: /opt/kafka/certificates
+            readOnly: true
+          {{- end }}
+          - name: jmx-ssl-config
+            mountPath: /opt/kafka/jmx
+            readOnly: true
+        env:
+          {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
+          - name: JMX_KEYSTORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
+                key: JMX_KEYSTORE_PASSWORD
+          - name: JMX_TRUSTSTORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
+                key: JMX_TRUSTSTORE_PASSWORD
+          {{- end }}
   {{- if .Values.entityOperator }}
   entityOperator:
     {{- toYaml .Values.entityOperator | nindent 4 }}
