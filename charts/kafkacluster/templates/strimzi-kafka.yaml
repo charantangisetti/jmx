@@ -34,20 +34,30 @@ spec:
     metricsConfig:
       {{- toYaml .Values.kafka.metricsConfig | nindent 6 }}
     {{- end }}
-    {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
     template:
       pod:
         volumes:
+          {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
           - name: jmx-certificates
             secret:
               secretName: {{ include "kafkacluster.fullname" . }}-jmx-certs
+          {{- end }}
+          - name: jmx-ssl-config
+            configMap:
+              name: {{ include "kafkacluster.fullname" . }}-jmx-ssl-config
         containers:
           - name: kafka
             volumeMounts:
+              {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
               - name: jmx-certificates
                 mountPath: /opt/kafka/certificates
                 readOnly: true
+              {{- end }}
+              - name: jmx-ssl-config
+                mountPath: /opt/kafka/jmx
+                readOnly: true
             env:
+              {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
               - name: JMX_KEYSTORE_PASSWORD
                 valueFrom:
                   secretKeyRef:
@@ -58,7 +68,7 @@ spec:
                   secretKeyRef:
                     name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
                     key: JMX_TRUSTSTORE_PASSWORD
-    {{- end }}
+              {{- end }}
   zookeeper:
     {{- if .Values.zookeeper.replicas }}
     replicas: {{ .Values.zookeeper.replicas }}
@@ -75,20 +85,30 @@ spec:
     jvmOptions:
       {{- toYaml .Values.zookeeper.jvmOptions | nindent 6 }}
     {{- end }}
-    {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
     template:
       pod:
         volumes:
+          {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
           - name: jmx-certificates
             secret:
               secretName: {{ include "kafkacluster.fullname" . }}-jmx-certs
+          {{- end }}
+          - name: jmx-ssl-config
+            configMap:
+              name: {{ include "kafkacluster.fullname" . }}-jmx-ssl-config
         containers:
           - name: zookeeper
             volumeMounts:
+              {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
               - name: jmx-certificates
                 mountPath: /opt/kafka/certificates
                 readOnly: true
+              {{- end }}
+              - name: jmx-ssl-config
+                mountPath: /opt/kafka/jmx
+                readOnly: true
             env:
+              {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystore }}
               - name: JMX_KEYSTORE_PASSWORD
                 valueFrom:
                   secretKeyRef:
@@ -99,7 +119,7 @@ spec:
                   secretKeyRef:
                     name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
                     key: JMX_TRUSTSTORE_PASSWORD
-    {{- end }}
+              {{- end }}
   {{- if .Values.entityOperator }}
   entityOperator:
     {{- toYaml .Values.entityOperator | nindent 4 }}

@@ -25,7 +25,7 @@ kafka:
     size: 10Gi
     type: persistent-claim
   version: 3.9.0
-  # JMX configuration with SSL
+  # JMX configuration - using password auth with Strimzi
   jmxOptions:
     authentication:
       type: password
@@ -33,21 +33,9 @@ kafka:
     "-Xmx": "2G"
     "-Xms": "2G"
     "-XX":
-      "+UseG1GC": "true"
+      "UseG1GC": "true"
       "MaxGCPauseMillis": "20"
     javaSystemProperties:
-      - name: "com.sun.management.jmxremote"
-        value: "true"
-      - name: "com.sun.management.jmxremote.port"
-        value: "9999"
-      - name: "com.sun.management.jmxremote.rmi.port"
-        value: "9999"
-      - name: "com.sun.management.jmxremote.ssl"
-        value: "true"
-      - name: "com.sun.management.jmxremote.registry.ssl"
-        value: "true"
-      - name: "com.sun.management.jmxremote.ssl.need.client.auth"
-        value: "true"
       - name: "javax.net.ssl.keyStore"
         value: "/opt/kafka/certificates/jmx-keystore.jks"
       - name: "javax.net.ssl.keyStorePassword"
@@ -56,6 +44,8 @@ kafka:
         value: "/opt/kafka/certificates/jmx-truststore.jks"
       - name: "javax.net.ssl.trustStorePassword"
         value: "${JMX_TRUSTSTORE_PASSWORD}"
+      - name: "com.sun.management.jmxremote.ssl.config.file"
+        value: "/opt/kafka/jmx/jmx.ssl.properties"
   # Metrics configuration for Prometheus JMX Exporter
   metricsConfig:
     type: jmxPrometheusExporter
@@ -71,7 +61,7 @@ zookeeper:
     deleteClaim: false
     size: 10Gi
     type: persistent-claim
-  # JMX configuration with SSL for Zookeeper
+  # JMX configuration - using password auth with Strimzi
   jmxOptions:
     authentication:
       type: password
@@ -79,20 +69,8 @@ zookeeper:
     "-Xmx": "1G"
     "-Xms": "1G"
     "-XX":
-      "+UseG1GC": "true"
+      "UseG1GC": "true"
     javaSystemProperties:
-      - name: "com.sun.management.jmxremote"
-        value: "true"
-      - name: "com.sun.management.jmxremote.port"
-        value: "9998"
-      - name: "com.sun.management.jmxremote.rmi.port"
-        value: "9998"
-      - name: "com.sun.management.jmxremote.ssl"
-        value: "true"
-      - name: "com.sun.management.jmxremote.registry.ssl"
-        value: "true"
-      - name: "com.sun.management.jmxremote.ssl.need.client.auth"
-        value: "true"
       - name: "javax.net.ssl.keyStore"
         value: "/opt/kafka/certificates/jmx-keystore.jks"
       - name: "javax.net.ssl.keyStorePassword"
@@ -101,6 +79,8 @@ zookeeper:
         value: "/opt/kafka/certificates/jmx-truststore.jks"
       - name: "javax.net.ssl.trustStorePassword"
         value: "${JMX_TRUSTSTORE_PASSWORD}"
+      - name: "com.sun.management.jmxremote.ssl.config.file"
+        value: "/opt/kafka/jmx/jmx.ssl.properties"
 
 # JMX SSL Certificates
 # Generate these using scripts/generate-jmx-certificates.sh
