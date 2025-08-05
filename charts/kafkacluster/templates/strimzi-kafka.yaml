@@ -42,9 +42,26 @@ spec:
             secret:
               secretName: {{ include "kafkacluster.fullname" . }}-jmx-certs
           {{- end }}
-          - name: jmx-ssl-config
+          - name: jmx-ssl-config-source
             configMap:
               name: {{ include "kafkacluster.fullname" . }}-jmx-ssl-config
+          - name: jmx-ssl-config
+            emptyDir: {}
+      initContainers:
+        - name: copy-jmx-config
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              cp /tmp/jmx-config-source/jmx-ssl.properties /mnt/jmx-config/jmx-ssl.properties
+              chmod 600 /mnt/jmx-config/jmx-ssl.properties
+              ls -la /mnt/jmx-config/
+          volumeMounts:
+            - name: jmx-ssl-config-source
+              mountPath: /tmp/jmx-config-source
+            - name: jmx-ssl-config
+              mountPath: /mnt/jmx-config
       kafkaContainer:
         volumeMounts:
           {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystorePath }}
@@ -92,9 +109,26 @@ spec:
             secret:
               secretName: {{ include "kafkacluster.fullname" . }}-jmx-certs
           {{- end }}
-          - name: jmx-ssl-config
+          - name: jmx-ssl-config-source
             configMap:
               name: {{ include "kafkacluster.fullname" . }}-jmx-ssl-config
+          - name: jmx-ssl-config
+            emptyDir: {}
+      initContainers:
+        - name: copy-jmx-config
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              cp /tmp/jmx-config-source/jmx-ssl.properties /mnt/jmx-config/jmx-ssl.properties
+              chmod 600 /mnt/jmx-config/jmx-ssl.properties
+              ls -la /mnt/jmx-config/
+          volumeMounts:
+            - name: jmx-ssl-config-source
+              mountPath: /tmp/jmx-config-source
+            - name: jmx-ssl-config
+              mountPath: /mnt/jmx-config
       zookeeperContainer:
         volumeMounts:
           {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystorePath }}
