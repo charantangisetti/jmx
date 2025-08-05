@@ -35,7 +35,29 @@ kafka:
     "-XX":
       "UseG1GC": "true"
       "MaxGCPauseMillis": "20"
-    javaSystemProperties: []
+    javaSystemProperties:
+      - name: "com.sun.management.jmxremote.port"
+        value: "9999"
+      - name: "com.sun.management.jmxremote.password.file"
+        value: "/mnt/jmx-certs/jmxremote.password"
+      - name: "com.sun.management.jmxremote.access.file"
+        value: "/mnt/jmx-certs/jmxremote.access"
+      - name: "com.sun.management.jmxremote.ssl"
+        value: "true"
+      - name: "com.sun.management.jmxremote.registry.ssl"
+        value: "true"
+      - name: "com.sun.management.jmxremote.ssl.need.client.auth"
+        value: "true"
+      - name: "javax.net.ssl.keyStore"
+        value: "/mnt/jmx-certs/keystore.jks"
+      - name: "javax.net.ssl.keyStorePassword"
+        value: "$(JMX_KEYSTORE_PASSWORD)"
+      - name: "javax.net.ssl.trustStore"
+        value: "/mnt/jmx-certs/truststore.jks"
+      - name: "javax.net.ssl.trustStorePassword"
+        value: "$(JMX_TRUSTSTORE_PASSWORD)"
+      - name: "java.security.policy"
+        value: "/mnt/jmx-certs/jmx.policy"
   # Metrics configuration for Prometheus JMX Exporter
   metricsConfig:
     type: jmxPrometheusExporter
@@ -43,6 +65,42 @@ kafka:
       configMapKeyRef:
         name: kafka-metrics
         key: kafka-metrics-config.yml
+  template:
+    pod:
+      volumes:
+        - name: jmx-certs
+          secret:
+            secretName: "{{ include \"kafkacluster.fullname\" . }}-jmx-certs"
+            items:
+              - key: keystore.jks
+                path: keystore.jks
+              - key: truststore.jks
+                path: truststore.jks
+              - key: jmxremote.password
+                path: jmxremote.password
+                mode: 0600
+              - key: jmxremote.access
+                path: jmxremote.access
+                mode: 0600
+              - key: jmx.policy
+                path: jmx.policy
+                mode: 0644
+    kafkaContainer:
+      volumeMounts:
+        - name: jmx-certs
+          mountPath: /mnt/jmx-certs
+          readOnly: true
+      env:
+        - name: JMX_KEYSTORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: "{{ include \"kafkacluster.fullname\" . }}-jmx-passwords"
+              key: JMX_KEYSTORE_PASSWORD
+        - name: JMX_TRUSTSTORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: "{{ include \"kafkacluster.fullname\" . }}-jmx-passwords"
+              key: JMX_TRUSTSTORE_PASSWORD
 strimzi-kafka-operator:
   watchAnyNamespace: true
 zookeeper:
@@ -60,13 +118,75 @@ zookeeper:
     "-Xms": "1G"
     "-XX":
       "UseG1GC": "true"
-    javaSystemProperties: []
+    javaSystemProperties:
+      - name: "com.sun.management.jmxremote.port"
+        value: "9999"
+      - name: "com.sun.management.jmxremote.password.file"
+        value: "/mnt/jmx-certs/jmxremote.password"
+      - name: "com.sun.management.jmxremote.access.file"
+        value: "/mnt/jmx-certs/jmxremote.access"
+      - name: "com.sun.management.jmxremote.ssl"
+        value: "true"
+      - name: "com.sun.management.jmxremote.registry.ssl"
+        value: "true"
+      - name: "com.sun.management.jmxremote.ssl.need.client.auth"
+        value: "true"
+      - name: "javax.net.ssl.keyStore"
+        value: "/mnt/jmx-certs/keystore.jks"
+      - name: "javax.net.ssl.keyStorePassword"
+        value: "$(JMX_KEYSTORE_PASSWORD)"
+      - name: "javax.net.ssl.trustStore"
+        value: "/mnt/jmx-certs/truststore.jks"
+      - name: "javax.net.ssl.trustStorePassword"
+        value: "$(JMX_TRUSTSTORE_PASSWORD)"
+      - name: "java.security.policy"
+        value: "/mnt/jmx-certs/jmx.policy"
+  template:
+    pod:
+      volumes:
+        - name: jmx-certs
+          secret:
+            secretName: "{{ include \"kafkacluster.fullname\" . }}-jmx-certs"
+            items:
+              - key: keystore.jks
+                path: keystore.jks
+              - key: truststore.jks
+                path: truststore.jks
+              - key: jmxremote.password
+                path: jmxremote.password
+                mode: 0600
+              - key: jmxremote.access
+                path: jmxremote.access
+                mode: 0600
+              - key: jmx.policy
+                path: jmx.policy
+                mode: 0644
+    zookeeperContainer:
+      volumeMounts:
+        - name: jmx-certs
+          mountPath: /mnt/jmx-certs
+          readOnly: true
+      env:
+        - name: JMX_KEYSTORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: "{{ include \"kafkacluster.fullname\" . }}-jmx-passwords"
+              key: JMX_KEYSTORE_PASSWORD
+        - name: JMX_TRUSTSTORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: "{{ include \"kafkacluster.fullname\" . }}-jmx-passwords"
+              key: JMX_TRUSTSTORE_PASSWORD
 
 # JMX SSL Certificates
 # Generate these using scripts/generate-jmx-certificates.sh
 jmxCertificates:
   keystorePath: "certs/keystore.jks"
   truststorePath: "certs/truststore.jks"
+  # JMX authentication and policy files
+  jmxremotePasswordPath: "certs/jmxremote.password"
+  jmxremoteAccessPath: "certs/jmxremote.access"
+  jmxPolicyPath: "certs/jmx.policy"
 
 jmxPasswords:
   keystorePasswordPath: "certs/keystore.password"

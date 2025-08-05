@@ -90,32 +90,69 @@ echo "  - keystore.jks (Server keystore)"
 echo "  - truststore.jks (Truststore)"
 echo "  - jmx-client-keystore.jks (Client keystore for JMX access)"
 echo "  - ca-cert.pem (CA certificate)"
+echo "  - jmxremote.password (JMX authentication file)"
+echo "  - jmxremote.access (JMX access control file)"
+echo "  - jmx.policy (JMX security policy file)"
 echo ""
 echo "Passwords:"
 echo "  Keystore password: $KEYSTORE_PASSWORD"
 echo "  Truststore password: $TRUSTSTORE_PASSWORD"
+echo "  Monitor password: $MONITOR_PASSWORD"
+echo "  Control password: $CONTROL_PASSWORD"
 echo ""
 echo "To create Kubernetes secrets, run:"
 echo ""
 echo "kubectl create secret generic phziot-kafkacluster-jmx-certs -n $NAMESPACE \\"
 echo "  --from-file=keystore.jks=$CERT_DIR/keystore.jks \\"
-echo "  --from-file=truststore.jks=$CERT_DIR/truststore.jks"
+echo "  --from-file=truststore.jks=$CERT_DIR/truststore.jks \\"
+echo "  --from-file=jmxremote.password=$CERT_DIR/jmxremote.password \\"
+echo "  --from-file=jmxremote.access=$CERT_DIR/jmxremote.access \\"
+echo "  --from-file=jmx.policy=$CERT_DIR/jmx.policy"
 echo ""
 echo "kubectl create secret generic phziot-kafkacluster-jmx-passwords -n $NAMESPACE \\"
 echo "  --from-literal=JMX_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD \\"
-echo "  --from-literal=JMX_TRUSTSTORE_PASSWORD=$TRUSTSTORE_PASSWORD"
+echo "  --from-literal=JMX_TRUSTSTORE_PASSWORD=$TRUSTSTORE_PASSWORD \\"
+echo "  --from-literal=JMX_MONITOR_PASSWORD=$MONITOR_PASSWORD \\"
+echo "  --from-literal=JMX_CONTROL_PASSWORD=$CONTROL_PASSWORD"
 echo ""
 # Generate password files
 echo "$KEYSTORE_PASSWORD" > keystore.password
 echo "$TRUSTSTORE_PASSWORD" > truststore.password
-echo "$(openssl rand -base64 16)" > monitor.password
-echo "$(openssl rand -base64 16)" > control.password
+MONITOR_PASSWORD=$(openssl rand -base64 16)
+CONTROL_PASSWORD=$(openssl rand -base64 16)
+echo "$MONITOR_PASSWORD" > monitor.password
+echo "$CONTROL_PASSWORD" > control.password
+
+# Generate JMX remote password file
+echo "Creating JMX remote password file..."
+cat > jmxremote.password <<EOF
+monitor $MONITOR_PASSWORD
+control $CONTROL_PASSWORD
+EOF
+
+# Generate JMX remote access file
+echo "Creating JMX remote access file..."
+cat > jmxremote.access <<EOF
+monitor readonly
+control readwrite
+EOF
+
+# Generate JMX security policy file
+echo "Creating JMX security policy file..."
+cat > jmx.policy <<EOF
+grant {
+    permission java.security.AllPermission;
+};
+EOF
 
 echo "For values.yaml configuration:"
 echo ""
 echo "jmxCertificates:"
 echo "  keystorePath: \"$CERT_DIR/keystore.jks\""
 echo "  truststorePath: \"$CERT_DIR/truststore.jks\""
+echo "  jmxremotePasswordPath: \"$CERT_DIR/jmxremote.password\""
+echo "  jmxremoteAccessPath: \"$CERT_DIR/jmxremote.access\""
+echo "  jmxPolicyPath: \"$CERT_DIR/jmx.policy\""
 echo ""
 echo "jmxPasswords:"
 echo "  keystorePasswordPath: \"$CERT_DIR/keystore.password\""
