@@ -68,23 +68,31 @@ kafka:
   template:
     pod:
       volumes:
-        - name: jmx-certs
+        - name: jmx-certs-source
           secret:
             secretName: "{{ include \"kafkacluster.fullname\" . }}-jmx-certs"
-            items:
-              - key: keystore.jks
-                path: keystore.jks
-              - key: truststore.jks
-                path: truststore.jks
-              - key: jmxremote.password
-                path: jmxremote.password
-                mode: 0600
-              - key: jmxremote.access
-                path: jmxremote.access
-                mode: 0600
-              - key: jmx.policy
-                path: jmx.policy
-                mode: 0644
+        - name: jmx-certs
+          emptyDir: {}
+      initContainers:
+        - name: fix-jmx-permissions
+          image: busybox:1.36.1
+          command:
+            - sh
+            - -c
+            - |
+              cp -r /mnt/jmx-certs-source/* /mnt/jmx-certs/
+              chmod 600 /mnt/jmx-certs/jmxremote.password
+              chmod 600 /mnt/jmx-certs/jmxremote.access
+              chmod 644 /mnt/jmx-certs/jmx.policy
+              chmod 644 /mnt/jmx-certs/keystore.jks
+              chmod 644 /mnt/jmx-certs/truststore.jks
+              ls -la /mnt/jmx-certs/
+          volumeMounts:
+            - name: jmx-certs-source
+              mountPath: /mnt/jmx-certs-source
+              readOnly: true
+            - name: jmx-certs
+              mountPath: /mnt/jmx-certs
     kafkaContainer:
       volumeMounts:
         - name: jmx-certs
@@ -144,23 +152,31 @@ zookeeper:
   template:
     pod:
       volumes:
-        - name: jmx-certs
+        - name: jmx-certs-source
           secret:
             secretName: "{{ include \"kafkacluster.fullname\" . }}-jmx-certs"
-            items:
-              - key: keystore.jks
-                path: keystore.jks
-              - key: truststore.jks
-                path: truststore.jks
-              - key: jmxremote.password
-                path: jmxremote.password
-                mode: 0600
-              - key: jmxremote.access
-                path: jmxremote.access
-                mode: 0600
-              - key: jmx.policy
-                path: jmx.policy
-                mode: 0644
+        - name: jmx-certs
+          emptyDir: {}
+      initContainers:
+        - name: fix-jmx-permissions
+          image: busybox:1.36.1
+          command:
+            - sh
+            - -c
+            - |
+              cp -r /mnt/jmx-certs-source/* /mnt/jmx-certs/
+              chmod 600 /mnt/jmx-certs/jmxremote.password
+              chmod 600 /mnt/jmx-certs/jmxremote.access
+              chmod 644 /mnt/jmx-certs/jmx.policy
+              chmod 644 /mnt/jmx-certs/keystore.jks
+              chmod 644 /mnt/jmx-certs/truststore.jks
+              ls -la /mnt/jmx-certs/
+          volumeMounts:
+            - name: jmx-certs-source
+              mountPath: /mnt/jmx-certs-source
+              readOnly: true
+            - name: jmx-certs
+              mountPath: /mnt/jmx-certs
     zookeeperContainer:
       volumeMounts:
         - name: jmx-certs
