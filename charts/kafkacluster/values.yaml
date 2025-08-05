@@ -35,21 +35,7 @@ kafka:
     "-XX":
       "UseG1GC": "true"
       "MaxGCPauseMillis": "20"
-    javaSystemProperties:
-      # JMX SSL configuration
-      - name: "com.sun.management.jmxremote.ssl.need.client.auth"
-        value: "true"
-      - name: "com.sun.management.jmxremote.registry.ssl"
-        value: "true"
-      # Global SSL settings for JMX
-      - name: "javax.net.ssl.keyStore"
-        value: "/mnt/jmx-certs/keystore.jks"
-      - name: "javax.net.ssl.keyStorePassword"
-        value: "${JMX_KEYSTORE_PASSWORD}"
-      - name: "javax.net.ssl.trustStore"
-        value: "/mnt/jmx-certs/truststore.jks"
-      - name: "javax.net.ssl.trustStorePassword"
-        value: "${JMX_TRUSTSTORE_PASSWORD}"
+    javaSystemProperties: []
   # Metrics configuration for Prometheus JMX Exporter
   metricsConfig:
     type: jmxPrometheusExporter
@@ -74,21 +60,7 @@ zookeeper:
     "-Xms": "1G"
     "-XX":
       "UseG1GC": "true"
-    javaSystemProperties:
-      # JMX SSL configuration
-      - name: "com.sun.management.jmxremote.ssl.need.client.auth"
-        value: "true"
-      - name: "com.sun.management.jmxremote.registry.ssl"
-        value: "true"
-      # Global SSL settings for JMX
-      - name: "javax.net.ssl.keyStore"
-        value: "/mnt/jmx-certs/keystore.jks"
-      - name: "javax.net.ssl.keyStorePassword"
-        value: "${JMX_KEYSTORE_PASSWORD}"
-      - name: "javax.net.ssl.trustStore"
-        value: "/mnt/jmx-certs/truststore.jks"
-      - name: "javax.net.ssl.trustStorePassword"
-        value: "${JMX_TRUSTSTORE_PASSWORD}"
+    javaSystemProperties: []
 
 # JMX SSL Certificates
 # Generate these using scripts/generate-jmx-certificates.sh
@@ -110,3 +82,8 @@ jmxExporter:
     enabled: true
   username: ""
   password: ""
+
+# JMX SSL Proxy - provides SSL wrapper for JMX without interfering with Strimzi
+jmxSSLProxy:
+  enabled: false  # Set to true to enable SSL for JMX
+  image: alpine:3.19  # Image with stunnel and openssl

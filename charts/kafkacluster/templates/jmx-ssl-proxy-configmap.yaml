@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kafkacluster.fullname" . }}-jmx-ssl-proxy
+  labels:
+    {{- include "kafkacluster.labels" . | nindent 4 }}
+data:
+  stunnel.conf: |
+    # Stunnel configuration for JMX SSL proxy
+    foreground = yes
+    debug = 7
+    
+    [jmx-ssl]
+    accept = 9998
+    connect = localhost:9999
+    cert = /mnt/jmx-certs/server.pem
+    key = /mnt/jmx-certs/server.key
+    CAfile = /mnt/jmx-certs/ca.pem
+    verify = 2
+    
+  start-proxy.sh: |
+    #!/bin/bash
+    # Convert JKS to PEM for stunnel
+    echo "Converting certificates..."
+    
+    # Extract certificates from keystore
+    keytool -export -alias kafka-jmx -keystore /mnt/jmx-certs/keystore.jks \
+      -storepass "$JMX_KEYSTORE_PASSWORD" -rfc -file /tmp/server.crt
+    
+    # Extract private key (requires openssl and keytool)
+    keytool -importkeystore -srckeystore /mnt/jmx-certs/keystore.jks \
+      -srcstorepass "$JMX_KEYSTORE_PASSWORD" \
+      -destkeystore /tmp/keystore.p12 -deststoretype PKCS12 \
+      -deststorepass "$JMX_KEYSTORE_PASSWORD" -noprompt
+    
+    openssl pkcs12 -in /tmp/keystore.p12 -nodes -nocerts \
+      -passin pass:"$JMX_KEYSTORE_PASSWORD" -out /mnt/jmx-certs/server.key
+    
+    openssl pkcs12 -in /tmp/keystore.p12 -nokeys -clcerts \
+      -passin pass:"$JMX_KEYSTORE_PASSWORD" -out /mnt/jmx-certs/server.pem
+    
+    # Extract CA from truststore
+    keytool -export -alias CARoot -keystore /mnt/jmx-certs/truststore.jks \
+      -storepass "$JMX_TRUSTSTORE_PASSWORD" -rfc -file /mnt/jmx-certs/ca.pem
+    
+    echo "Starting stunnel..."
+    exec stunnel /etc/stunnel/stunnel.conf
