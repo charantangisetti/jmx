@@ -35,7 +35,17 @@ kafka:
     "-XX":
       "UseG1GC": "true"
       "MaxGCPauseMillis": "20"
-    javaSystemProperties: []
+    javaSystemProperties:
+      # JMX-specific SSL configuration
+      - name: "com.sun.management.jmxremote.ssl"
+        value: "true"
+      - name: "com.sun.management.jmxremote.registry.ssl"
+        value: "true"
+      - name: "com.sun.management.jmxremote.ssl.need.client.auth"
+        value: "true"
+      # JMX-specific SSL config files
+      - name: "com.sun.management.jmxremote.ssl.config.file"
+        value: "/opt/kafka/jmx-ssl.properties"
   # Metrics configuration for Prometheus JMX Exporter
   metricsConfig:
     type: jmxPrometheusExporter
@@ -60,7 +70,17 @@ zookeeper:
     "-Xms": "1G"
     "-XX":
       "UseG1GC": "true"
-    javaSystemProperties: []
+    javaSystemProperties:
+      # JMX-specific SSL configuration
+      - name: "com.sun.management.jmxremote.ssl"
+        value: "true"
+      - name: "com.sun.management.jmxremote.registry.ssl"
+        value: "true"
+      - name: "com.sun.management.jmxremote.ssl.need.client.auth"
+        value: "true"
+      # JMX-specific SSL config files
+      - name: "com.sun.management.jmxremote.ssl.config.file"
+        value: "/opt/kafka/jmx-ssl.properties"
 
 # JMX SSL Certificates
 # Generate these using scripts/generate-jmx-certificates.sh
