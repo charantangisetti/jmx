@@ -34,46 +34,19 @@ spec:
     metricsConfig:
       {{- toYaml .Values.kafka.metricsConfig | nindent 6 }}
     {{- end }}
+    {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystorePath }}
     template:
       pod:
         volumes:
-          {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystorePath }}
           - name: jmx-certs
             secret:
               secretName: {{ include "kafkacluster.fullname" . }}-jmx-certs
-          {{- end }}
-          - name: jmx-ssl-config-source
-            configMap:
-              name: {{ include "kafkacluster.fullname" . }}-jmx-ssl-config
-          - name: jmx-ssl-config
-            emptyDir: {}
-      initContainers:
-        - name: copy-jmx-config
-          image: busybox:1.36
-          command:
-            - sh
-            - -c
-            - |
-              cp /tmp/jmx-config-source/jmx-ssl.properties /mnt/jmx-config/jmx-ssl.properties
-              chmod 600 /mnt/jmx-config/jmx-ssl.properties
-              ls -la /mnt/jmx-config/
-          volumeMounts:
-            - name: jmx-ssl-config-source
-              mountPath: /tmp/jmx-config-source
-            - name: jmx-ssl-config
-              mountPath: /mnt/jmx-config
       kafkaContainer:
         volumeMounts:
-          {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystorePath }}
           - name: jmx-certs
             mountPath: /mnt/jmx-certs
             readOnly: true
-          {{- end }}
-          - name: jmx-ssl-config
-            mountPath: /mnt/jmx-config
-            readOnly: true
         env:
-          {{- if and .Values.jmxPasswords .Values.jmxPasswords.keystorePasswordPath }}
           - name: JMX_KEYSTORE_PASSWORD
             valueFrom:
               secretKeyRef:
@@ -84,7 +57,7 @@ spec:
               secretKeyRef:
                 name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
                 key: JMX_TRUSTSTORE_PASSWORD
-          {{- end }}
+    {{- end }}
   zookeeper:
     {{- if .Values.zookeeper.replicas }}
     replicas: {{ .Values.zookeeper.replicas }}
@@ -101,46 +74,19 @@ spec:
     jvmOptions:
       {{- toYaml .Values.zookeeper.jvmOptions | nindent 6 }}
     {{- end }}
+    {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystorePath }}
     template:
       pod:
         volumes:
-          {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystorePath }}
           - name: jmx-certs
             secret:
               secretName: {{ include "kafkacluster.fullname" . }}-jmx-certs
-          {{- end }}
-          - name: jmx-ssl-config-source
-            configMap:
-              name: {{ include "kafkacluster.fullname" . }}-jmx-ssl-config
-          - name: jmx-ssl-config
-            emptyDir: {}
-      initContainers:
-        - name: copy-jmx-config
-          image: busybox:1.36
-          command:
-            - sh
-            - -c
-            - |
-              cp /tmp/jmx-config-source/jmx-ssl.properties /mnt/jmx-config/jmx-ssl.properties
-              chmod 600 /mnt/jmx-config/jmx-ssl.properties
-              ls -la /mnt/jmx-config/
-          volumeMounts:
-            - name: jmx-ssl-config-source
-              mountPath: /tmp/jmx-config-source
-            - name: jmx-ssl-config
-              mountPath: /mnt/jmx-config
       zookeeperContainer:
         volumeMounts:
-          {{- if and .Values.jmxCertificates .Values.jmxCertificates.keystorePath }}
           - name: jmx-certs
             mountPath: /mnt/jmx-certs
             readOnly: true
-          {{- end }}
-          - name: jmx-ssl-config
-            mountPath: /mnt/jmx-config
-            readOnly: true
         env:
-          {{- if and .Values.jmxPasswords .Values.jmxPasswords.keystorePasswordPath }}
           - name: JMX_KEYSTORE_PASSWORD
             valueFrom:
               secretKeyRef:
@@ -151,7 +97,7 @@ spec:
               secretKeyRef:
                 name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
                 key: JMX_TRUSTSTORE_PASSWORD
-          {{- end }}
+    {{- end }}
   {{- if .Values.entityOperator }}
   entityOperator:
     {{- toYaml .Values.entityOperator | nindent 4 }}

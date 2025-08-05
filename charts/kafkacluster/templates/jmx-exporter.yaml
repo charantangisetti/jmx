@@ -1,0 +1,107 @@
+{{- if .Values.jmxExporter.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kafkacluster.fullname" . }}-jmx-exporter
+  labels:
+    {{- include "kafkacluster.labels" . | nindent 4 }}
+    app.kubernetes.io/component: jmx-exporter
+spec:
+  replicas: {{ .Values.kafka.replicas }}
+  selector:
+    matchLabels:
+      {{- include "kafkacluster.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: jmx-exporter
+  template:
+    metadata:
+      labels:
+        {{- include "kafkacluster.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: jmx-exporter
+    spec:
+      containers:
+      - name: jmx-exporter
+        image: sscaling/jmx-prometheus-exporter:0.20.0
+        ports:
+        - containerPort: 5556
+          name: metrics
+        command:
+        - java
+        - -jar
+        - jmx_prometheus_httpserver.jar
+        - "5556"
+        - /etc/jmx-exporter/config.yaml
+        volumeMounts:
+        - name: jmx-config
+          mountPath: /etc/jmx-exporter
+        {{- if .Values.jmxExporter.ssl.enabled }}
+        - name: ssl-certs
+          mountPath: /etc/ssl/jmx
+          readOnly: true
+        {{- end }}
+        env:
+        - name: JMX_HOST
+          value: "{{ include "kafkacluster.fullname" . }}-kafka-{{ .Values.kafka.replicas | sub 1 }}.{{ include "kafkacluster.fullname" . }}-kafka-brokers"
+        - name: JMX_PORT
+          value: "9999"
+        {{- if .Values.jmxExporter.ssl.enabled }}
+        - name: JAVA_OPTS
+          value: >-
+            -Djavax.net.ssl.keyStore=/etc/ssl/jmx/keystore.jks
+            -Djavax.net.ssl.keyStorePassword=$(SSL_KEYSTORE_PASSWORD)
+            -Djavax.net.ssl.trustStore=/etc/ssl/jmx/truststore.jks
+            -Djavax.net.ssl.trustStorePassword=$(SSL_TRUSTSTORE_PASSWORD)
+            -Dcom.sun.management.jmxremote.ssl=true
+        - name: SSL_KEYSTORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
+              key: JMX_KEYSTORE_PASSWORD
+        - name: SSL_TRUSTSTORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "kafkacluster.fullname" . }}-jmx-passwords
+              key: JMX_TRUSTSTORE_PASSWORD
+        {{- end }}
+      volumes:
+      - name: jmx-config
+        configMap:
+          name: {{ include "kafkacluster.fullname" . }}-jmx-exporter-config
+      {{- if .Values.jmxExporter.ssl.enabled }}
+      - name: ssl-certs
+        secret:
+          secretName: {{ include "kafkacluster.fullname" . }}-jmx-certs
+      {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kafkacluster.fullname" . }}-jmx-exporter-config
+  labels:
+    {{- include "kafkacluster.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    ---
+    hostPort: {{ include "kafkacluster.fullname" . }}-kafka-brokers:9999
+    ssl: {{ .Values.jmxExporter.ssl.enabled }}
+    username: {{ .Values.jmxExporter.username | default "" }}
+    password: {{ .Values.jmxExporter.password | default "" }}
+    
+    rules:
+    - pattern: ".*"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kafkacluster.fullname" . }}-jmx-exporter
+  labels:
+    {{- include "kafkacluster.labels" . | nindent 4 }}
+spec:
+  ports:
+  - port: 5556
+    targetPort: metrics
+    protocol: TCP
+    name: metrics
+  selector:
+    {{- include "kafkacluster.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: jmx-exporter
+{{- end }}
