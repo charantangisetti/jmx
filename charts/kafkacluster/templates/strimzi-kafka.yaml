@@ -53,8 +53,7 @@ spec:
             readOnly: true
           {{- end }}
           - name: jmx-ssl-config
-            mountPath: /opt/kafka/jmx-ssl.properties
-            subPath: jmx-ssl.properties
+            mountPath: /mnt/jmx-config
             readOnly: true
         env:
           {{- if and .Values.jmxPasswords .Values.jmxPasswords.keystorePasswordPath }}
@@ -104,8 +103,7 @@ spec:
             readOnly: true
           {{- end }}
           - name: jmx-ssl-config
-            mountPath: /opt/kafka/jmx-ssl.properties
-            subPath: jmx-ssl.properties
+            mountPath: /mnt/jmx-config
             readOnly: true
         env:
           {{- if and .Values.jmxPasswords .Values.jmxPasswords.keystorePasswordPath }}

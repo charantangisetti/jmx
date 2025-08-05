@@ -45,7 +45,7 @@ kafka:
         value: "true"
       # JMX-specific SSL config files
       - name: "com.sun.management.jmxremote.ssl.config.file"
-        value: "/opt/kafka/jmx-ssl.properties"
+        value: "/mnt/jmx-config/jmx-ssl.properties"
   # Metrics configuration for Prometheus JMX Exporter
   metricsConfig:
     type: jmxPrometheusExporter
@@ -80,7 +80,7 @@ zookeeper:
         value: "true"
       # JMX-specific SSL config files
       - name: "com.sun.management.jmxremote.ssl.config.file"
-        value: "/opt/kafka/jmx-ssl.properties"
+        value: "/mnt/jmx-config/jmx-ssl.properties"
 
 # JMX SSL Certificates
 # Generate these using scripts/generate-jmx-certificates.sh
