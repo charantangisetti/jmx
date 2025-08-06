@@ -37,14 +37,6 @@ spec:
   jvmOptions:
     "-Xmx": "4g"
     "-Xms": "4g"
-    # Explicitly disable JMX remote management for security
-    javaSystemProperties:
-      - name: "com.sun.management.jmxremote"
-        value: "false"
-      - name: "com.sun.management.jmxremote.authenticate"
-        value: "false"
-      - name: "com.sun.management.jmxremote.ssl"
-        value: "false"
   template:
     pod:
      {{- with .Values.imagePullSecrets }}

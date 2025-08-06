@@ -14,20 +14,20 @@ check_jmx_in_pod() {
     
     # Check JVM arguments
     echo "JVM Arguments:"
-    kubectl exec -it $pod_name -c $container -- bash -c 'ps aux | grep java' 2>/dev/null | grep -o '\-Dcom\.sun\.management\.jmxremote[^ ]*' || echo "No JMX arguments found"
+    kubectl exec -it $pod_name -n phziot -c $container -- bash -c 'ps aux | grep java' 2>/dev/null | grep -o '\-Dcom\.sun\.management\.jmxremote[^ ]*' || echo "No JMX arguments found"
     
     # Check environment variables
     echo "KAFKA_JMX_OPTS:"
-    kubectl exec -it $pod_name -c $container -- printenv KAFKA_JMX_OPTS 2>/dev/null || echo "Not set"
+    kubectl exec -it $pod_name -n phziot -c $container -- printenv KAFKA_JMX_OPTS 2>/dev/null || echo "Not set"
     
     # Check if port 9999 is listening
     echo "Port 9999 status:"
-    kubectl exec -it $pod_name -c $container -- netstat -tlnp 2>/dev/null | grep 9999 || echo "Port 9999 not listening"
+    kubectl exec -it $pod_name -n phziot -c $container -- netstat -tlnp 2>/dev/null | grep 9999 || echo "Port 9999 not listening"
 }
 
 # Get Kafka pods
 echo "Kafka Broker Pods:"
-kafka_pods=$(kubectl get pods -l strimzi.io/name=*-kafka -o name | cut -d'/' -f2)
+kafka_pods=$(kubectl get pods -n phziot -l strimzi.io/cluster=phziot-kafkacluster,strimzi.io/kind=Kafka -o name | cut -d'/' -f2)
 for pod in $kafka_pods; do
     check_jmx_in_pod $pod "kafka"
 done
@@ -36,7 +36,7 @@ done
 echo ""
 echo "=========================================="
 echo "Zookeeper Pods:"
-zk_pods=$(kubectl get pods -l strimzi.io/name=*-zookeeper -o name | cut -d'/' -f2)
+zk_pods=$(kubectl get pods -n phziot -l strimzi.io/cluster=phziot-kafkacluster,strimzi.io/name=phziot-kafkacluster-zookeeper -o name | cut -d'/' -f2)
 for pod in $zk_pods; do
     check_jmx_in_pod $pod "zookeeper"
 done
@@ -45,7 +45,7 @@ done
 echo ""
 echo "=========================================="
 echo "Kafka Connect Pods:"
-connect_pods=$(kubectl get pods -l strimzi.io/kind=KafkaConnect -o name | cut -d'/' -f2)
+connect_pods=$(kubectl get pods -n phziot -l strimzi.io/kind=KafkaConnect -o name | cut -d'/' -f2)
 for pod in $connect_pods; do
     check_jmx_in_pod $pod "kafka-connect"
 done
