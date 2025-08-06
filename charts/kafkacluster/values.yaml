@@ -36,6 +36,10 @@ kafka:
     "-XX":
       "UseG1GC": "true"
       "MaxGCPauseMillis": "20"
+    # Explicitly disable JMX remote management for security
+    "-Dcom.sun.management.jmxremote": "false"
+    "-Dcom.sun.management.jmxremote.authenticate": "false"
+    "-Dcom.sun.management.jmxremote.ssl": "false"
   # Metrics configuration for Prometheus JMX Exporter
   metricsConfig:
     type: jmxPrometheusExporter
@@ -61,6 +65,10 @@ zookeeper:
     "-Xms": "1G"
     "-XX":
       "UseG1GC": "true"
+    # Explicitly disable JMX remote management for security
+    "-Dcom.sun.management.jmxremote": "false"
+    "-Dcom.sun.management.jmxremote.authenticate": "false"
+    "-Dcom.sun.management.jmxremote.ssl": "false"
 
 # JMX SSL Certificates
 # Generate these using scripts/generate-jmx-certificates.sh
