@@ -25,10 +25,11 @@ kafka:
     size: 10Gi
     type: persistent-claim
   version: 3.9.0
-  # JMX configuration - using password auth with Strimzi
-  jmxOptions:
-    authentication:
-      type: password
+  # JMX DISABLED - Security vulnerability mitigation
+  # Removing jmxOptions completely disables JMX port 9999
+  # jmxOptions:
+  #   authentication:
+  #     type: password
   jvmOptions:
     "-Xmx": "2G"
     "-Xms": "2G"
@@ -50,10 +51,11 @@ zookeeper:
     deleteClaim: false
     size: 10Gi
     type: persistent-claim
-  # JMX configuration - using password auth with Strimzi
-  jmxOptions:
-    authentication:
-      type: password
+  # JMX DISABLED - Security vulnerability mitigation
+  # Removing jmxOptions completely disables JMX port 9999
+  # jmxOptions:
+  #   authentication:
+  #     type: password
   jvmOptions:
     "-Xmx": "1G"
     "-Xms": "1G"
@@ -68,10 +70,17 @@ jmxCertificates:
   # Base64 encoded truststore file  
   truststore: ""
 
-# JMX Passwords
-jmxPasswords:
-  keystorePassword: ""
-  truststorePassword: ""
-  # JMX authentication passwords
-  monitorPassword: ""
-  controlPassword: ""
+# JMX DISABLED - All JMX configurations removed for security
+# Port 9999 is no longer exposed, eliminating the vulnerability
+# 
+# Note: JMX-based monitoring is disabled. Use Prometheus metrics instead:
+# - Kafka metrics available on port 9404
+# - Prometheus JMX Exporter provides comprehensive metrics
+# - No unencrypted JMX traffic
+
+# Legacy JMX configurations (DISABLED)
+# jmxSecurity:
+#   enabled: false
+# jmxPasswords:
+#   keystorePassword: ""
+#   truststorePassword: ""

@@ -29,6 +29,11 @@ spec:
   livenessProbe:
     initialDelaySeconds: 30
     timeoutSeconds: 5
+  # JMX DISABLED - Security vulnerability mitigation
+  # Explicitly ensuring JMX is not enabled to prevent port 9999 exposure
+  # jmxOptions:
+  #   authentication:
+  #     type: password
   jvmOptions:
     "-Xmx": "4g"
     "-Xms": "4g"
