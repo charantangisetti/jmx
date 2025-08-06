@@ -51,6 +51,13 @@ kafka:
       configMapKeyRef:
         name: kafka-metrics
         key: kafka-metrics-config.yml
+  # Template configuration to completely disable JMX
+  template:
+    kafkaContainer:
+      env:
+        # Override Strimzi's default JMX settings to completely disable JMX
+        - name: KAFKA_JMX_OPTS
+          value: "-Dcom.sun.management.jmxremote=false"
 strimzi-kafka-operator:
   watchAnyNamespace: true
 zookeeper:
@@ -77,6 +84,13 @@ zookeeper:
         value: "false"
       - name: "com.sun.management.jmxremote.ssl"
         value: "false"
+  # Template configuration to completely disable JMX
+  template:
+    zookeeperContainer:
+      env:
+        # Override Strimzi's default JMX settings to completely disable JMX
+        - name: KAFKA_JMX_OPTS
+          value: "-Dcom.sun.management.jmxremote=false"
 
 # JMX SSL Certificates
 # Generate these using scripts/generate-jmx-certificates.sh
@@ -86,13 +100,25 @@ jmxCertificates:
   # Base64 encoded truststore file  
   truststore: ""
 
-# JMX DISABLED - All JMX configurations removed for security
-# Port 9999 is no longer exposed, eliminating the vulnerability
+# JMX COMPLETELY DISABLED - Security vulnerability mitigation
 # 
-# Note: JMX-based monitoring is disabled. Use Prometheus metrics instead:
+# Problem: Strimzi adds default JMX options (-Dcom.sun.management.jmxremote=true) 
+# before custom javaSystemProperties, making it impossible to disable JMX using 
+# only javaSystemProperties.
+#
+# Solution: Use KAFKA_JMX_OPTS environment variable through template configuration.
+# This overrides Strimzi's default JMX settings and completely disables the JMX agent.
+#
+# Security benefits:
+# - Port 9999 is not exposed
+# - JMX agent is completely disabled
+# - No remote JMX access possible
+# - Eliminates JMX-related vulnerabilities
+#
+# Monitoring: Use Prometheus metrics instead
 # - Kafka metrics available on port 9404
 # - Prometheus JMX Exporter provides comprehensive metrics
-# - No unencrypted JMX traffic
+# - Secure and Kubernetes-native monitoring solution
 
 # Legacy JMX configurations (DISABLED)
 # jmxSecurity:

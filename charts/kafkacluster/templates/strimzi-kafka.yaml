@@ -34,6 +34,10 @@ spec:
     metricsConfig:
       {{- toYaml .Values.kafka.metricsConfig | nindent 6 }}
     {{- end }}
+    {{- if .Values.kafka.template }}
+    template:
+      {{- toYaml .Values.kafka.template | nindent 6 }}
+    {{- end }}
   zookeeper:
     {{- if .Values.zookeeper.replicas }}
     replicas: {{ .Values.zookeeper.replicas }}
@@ -49,6 +53,10 @@ spec:
     {{- if .Values.zookeeper.jvmOptions }}
     jvmOptions:
       {{- toYaml .Values.zookeeper.jvmOptions | nindent 6 }}
+    {{- end }}
+    {{- if .Values.zookeeper.template }}
+    template:
+      {{- toYaml .Values.zookeeper.template | nindent 6 }}
     {{- end }}
   {{- if .Values.entityOperator }}
   entityOperator:

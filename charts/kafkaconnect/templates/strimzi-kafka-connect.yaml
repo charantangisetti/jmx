@@ -51,6 +51,11 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
      {{- end }}
+    connectContainer:
+      env:
+        # Override Strimzi's default JMX settings to completely disable JMX
+        - name: KAFKA_JMX_OPTS
+          value: "-Dcom.sun.management.jmxremote=false"
   tls:
     trustedCertificates:
       - secretName: {{ .Release.Name }}-kafkacluster-cluster-ca-cert
